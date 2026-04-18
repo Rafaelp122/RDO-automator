@@ -30,3 +30,26 @@ class ConfigManager:
         except Exception as e:
             logger.error(f"Erro ao salvar configuração: {e}")
             raise
+
+    def import_config(self, file_path):
+        """Importa configurações de um arquivo externo"""
+        try:
+            with open(file_path, "rb") as f:
+                imported_config = tomllib.load(f)
+            self.config = imported_config
+            logger.info(f"Configuração importada de: {file_path}")
+            return self.config
+        except Exception as e:
+            logger.error(f"Erro ao importar configuração de {file_path}: {e}")
+            raise
+
+    def export_config(self, file_path, config_to_export=None):
+        """Exporta a configuração atual para um arquivo externo"""
+        config = config_to_export if config_to_export else self.config
+        try:
+            with open(file_path, "wb") as f:
+                tomli_w.dump(config, f)
+            logger.info(f"Configuração exportada para: {file_path}")
+        except Exception as e:
+            logger.error(f"Erro ao exportar configuração para {file_path}: {e}")
+            raise

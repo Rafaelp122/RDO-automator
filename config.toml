@@ -1,13 +1,14 @@
 [projeto]
-nome = "Diário de Obra Automatizado"
-autor = "Rafael Araújo"
-mes = 3
+nome = "Report Automator"
+autor = "Rafael Pereira"
+mes = 2
 ano = 2026
 
 [arquivos]
+linha_cabecalho = 4
 default_template = "assets/template.xlsx"
 user_template = "data/input/user_template.xlsx"
-dados_origem = "data/input/medicao.xlsx"
+dados_origem = "data/input/planilha_exemplo.xlsx"
 
 [posicoes]
 celula_data = "E3"
