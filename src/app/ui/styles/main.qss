@@ -38,10 +38,41 @@ QMainWindow {
 }
 
 #FieldLabel {
-    color: #475569;
+    color: #334155;
     font-size: 11px;
     font-weight: bold;
     margin-top: 5px;
+}
+
+QTableWidget {
+    background-color: #FFFFFF;
+    gridline-color: #CBD5E1;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    color: #1E293B;
+    font-size: 12px;
+}
+
+QHeaderView::section {
+    background-color: #3F51B5;
+    color: white;
+    padding: 4px;
+    border: 1px solid #303F9F;
+    font-weight: bold;
+}
+
+QTableWidget QTableCornerButton::section {
+    background-color: #3F51B5;
+    border: 1px solid #303F9F;
+}
+
+QTableWidget::item {
+    padding: 5px;
+}
+
+QTableWidget::item:selected {
+    background-color: #E2E8F0;
+    color: #1E293B;
 }
 
 QLineEdit {
@@ -65,6 +96,23 @@ QLineEdit {
 
 #SecondaryButton:hover {
     background-color: #EEF2FF;
+}
+
+QPushButton {
+    background-color: #3F51B5;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    height: 30px;
+    /* padding: 5px 15px; */
+}
+
+QPushButton:hover {
+    background-color: #303F9F;    /* Um roxo um pouco mais escuro ao passar o mouse */
+}
+
+QPushButton:pressed {
+    background-color: #1A237E;    /* Feedback visual ao clicar */
 }
 
 #BrowseButton {
@@ -114,4 +162,17 @@ QProgressBar {
 QProgressBar::chunk {
     background-color: #3F51B5;
     border-radius: 3px;
+}
+
+QScrollBar:vertical {
+    background: #E2E8F0; /* Fundo da barra */
+}
+
+QScrollBar::handle:vertical {
+    background: #3F51B5; /* O "corpinho" da barra que você arrasta */
+}
+
+/* As setinhas de cima e baixo */
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    background: none;
 }
