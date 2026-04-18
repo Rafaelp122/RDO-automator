@@ -1,3 +1,5 @@
+import os
+import subprocess
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMessageBox
 from PySide6.QtCore import Slot
 
@@ -7,6 +9,7 @@ from src.app.ui.components.header import Header
 from src.app.ui.components.processing_panel import ProcessingPanel
 from src.app.ui.utils.thread_manager import run_worker_thread
 from src.app.core.logger import logger
+from src.app.infra.config_manager import ConfigManager
 
 class MainWindow(QMainWindow):
     """
@@ -19,8 +22,11 @@ class MainWindow(QMainWindow):
         super().__init__()
         logger.info("Inicializando aplicação...")
         
+        self.config_manager = ConfigManager()
+        self.config = self.config_manager.load_config()
+        
         self.setWindowTitle("Report Automator v1.0")
-        self.setFixedSize(600, 560)
+        self.setFixedSize(600, 800)
         self._load_styles()
         
         # Lista de threads para evitar que o Python as delete prematuramente
@@ -40,7 +46,15 @@ class MainWindow(QMainWindow):
         self.processing_panel = ProcessingPanel()
         self.processing_panel.start_requested.connect(self.iniciar_processamento)
         self.processing_panel.revalidate_requested.connect(self.executar_validacao)
+        self.processing_panel.config_save_requested.connect(self.salvar_configuracao)
         
+        # Inicializa campos com config atual
+        self.processing_panel.set_config_values(
+            self.config['arquivos'].get('dados_origem', ''),
+            self.config['arquivos'].get('user_template', ''),
+            self.config.get('mapeamento', {})
+        )
+
         panel_container = QWidget()
         panel_layout = QVBoxLayout(panel_container)
         panel_layout.setContentsMargins(20, 20, 20, 20)
@@ -50,6 +64,18 @@ class MainWindow(QMainWindow):
         self._setup_footer()
         logger.info("Interface pronta.")
         self.executar_validacao()
+
+    def salvar_configuracao(self, novos_dados):
+        try:
+            self.config['arquivos'].update(novos_dados['arquivos'])
+            self.config['mapeamento'] = novos_dados['mapeamento']
+            self.config_manager.save_config(self.config)
+            logger.info("Configuração persistida com sucesso.")
+            QMessageBox.information(self, "Sucesso", "Configuração salva!")
+            self.executar_validacao()
+        except Exception as e:
+            logger.error(f"Falha ao salvar config: {e}")
+            QMessageBox.critical(self, "Erro", f"Falha ao salvar configuração: {e}")
 
     def _load_styles(self):
         try:
@@ -118,6 +144,8 @@ class MainWindow(QMainWindow):
         self.processing_panel.set_busy(True, "Gerando relatório...")
 
         worker = ProcessorWorker()
+        worker.progress_update.connect(self.processing_panel.update_progress)
+        
         thread = run_worker_thread(
             worker,
             on_finished=self.finalizar_sucesso,
@@ -133,7 +161,24 @@ class MainWindow(QMainWindow):
         self._is_running = False
         self.processing_panel.set_busy(False)
         self.processing_panel.set_progress_success()
-        QMessageBox.information(self, "Sucesso", f"Relatório gerado!\n{arquivo}")
+        
+        btn_open = QMessageBox.question(
+            self, "Sucesso", 
+            f"Relatório gerado!\n{arquivo}\n\nDeseja abrir a pasta de saída?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if btn_open == QMessageBox.Yes:
+            self._abrir_pasta_saida()
+
+    def _abrir_pasta_saida(self):
+        caminho = os.path.abspath("data/output")
+        if os.name == 'nt': # Windows
+            os.startfile(caminho)
+        else: # macOS/Linux
+            try:
+                subprocess.run(['xdg-open', caminho])
+            except:
+                logger.warning("Não foi possível abrir a pasta automaticamente.")
 
     @Slot(str)
     def finalizar_erro(self, msg):
