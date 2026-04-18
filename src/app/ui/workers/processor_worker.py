@@ -10,6 +10,7 @@ class ProcessorWorker(QObject):
     Keeps the UI logic clean and decoupled.
     """
     progress_log = Signal(str)
+    progress_update = Signal(int)
     finished = Signal(str)
     error = Signal(str)
 
@@ -53,7 +54,7 @@ class ProcessorWorker(QObject):
             self.progress_log.emit(msg)
             
             handler = ExcelHandler(config)
-            arquivo_final = handler.gerar_diario_completo()
+            arquivo_final = handler.gerar_diario_completo(progress_callback=self.progress_update.emit)
             
             msg = f"Concluído: {arquivo_final}"
             logger.info(msg)

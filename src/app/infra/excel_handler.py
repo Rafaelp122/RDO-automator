@@ -12,7 +12,7 @@ class ExcelHandler:
     def __init__(self, config):
         self.config = config
 
-    def gerar_diario_completo(self):
+    def gerar_diario_completo(self, progress_callback=None):
         """
         Executa o processo ETL:
         1. Lê dados brutos do Excel de origem.
@@ -46,6 +46,10 @@ class ExcelHandler:
 
         logger.info(f"Iniciando loop diário para o mês {mes}/{ano} ({ultimo_dia} abas)")
         for dia in range(1, ultimo_dia + 1):
+            if progress_callback:
+                progresso = int((dia / ultimo_dia) * 100)
+                progress_callback(progresso)
+
             data_atual = pd.Timestamp(year=ano, month=mes, day=dia)
             data_str = data_atual.strftime('%d-%m')
             
@@ -85,9 +89,24 @@ class ExcelHandler:
         # Remove a aba original de exemplo e salva o arquivo final
         wb.remove(ws_template)
         nome_saida = f"Diario_Consolidado_{mes:02d}_{ano}.xlsx"
-        caminho_saida = f"data/output/{nome_saida}"
+        caminho_saida = os.path.join("data", "output", nome_saida)
         
+        # Garante que o diretório de saída existe
+        os.makedirs(os.path.dirname(caminho_saida), exist_ok=True)
+
         logger.info(f"Tentando salvar arquivo consolidado em: {caminho_saida}")
+        
+        # Verifica se o arquivo está aberto/bloqueado
+        if os.path.exists(caminho_saida):
+            try:
+                # Tenta renomear o arquivo para ele mesmo. Se falhar, está aberto.
+                os.rename(caminho_saida, caminho_saida)
+            except OSError:
+                logger.error(f"O arquivo {caminho_saida} parece estar aberto no Excel.")
+                raise PermissionError(
+                    f"O arquivo '{nome_saida}' está aberto. Por favor, feche-o no Excel e tente novamente."
+                )
+
         try:
             wb.save(caminho_saida)
             logger.info("Relatório final gerado com sucesso.")
