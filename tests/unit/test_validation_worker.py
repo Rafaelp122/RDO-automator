@@ -2,18 +2,19 @@ import pytest
 import os
 import tomli_w
 from src.app.ui.workers.validation_worker import ValidationWorker
+from src.app.core.validator import ReportValidator
 
 class TestValidationWorker:
     
     def test_coordinate_validation_logic(self):
-        worker = ValidationWorker()
-        assert worker.is_valid_excel_coordinate("A1") is True
-        assert worker.is_valid_excel_coordinate("Z99") is True
-        assert worker.is_valid_excel_coordinate("ABC1000") is True
-        assert worker.is_valid_excel_coordinate("A0") is False
-        assert worker.is_valid_excel_coordinate("1A") is False
-        assert worker.is_valid_excel_coordinate("A") is False
-        assert worker.is_valid_excel_coordinate("ZZZZ1") is False # Max 3 letters (XFD is max in Excel, but 3 is a good limit)
+        validator = ReportValidator()
+        assert validator.is_valid_excel_coordinate("A1") is True
+        assert validator.is_valid_excel_coordinate("Z99") is True
+        assert validator.is_valid_excel_coordinate("ABC1000") is True
+        assert validator.is_valid_excel_coordinate("A0") is False
+        assert validator.is_valid_excel_coordinate("1A") is False
+        assert validator.is_valid_excel_coordinate("A") is False
+        assert validator.is_valid_excel_coordinate("ZZZZ1") is False
 
     def test_run_validation_invalid_coordinate(self, qtbot, tmp_path):
         os.chdir(tmp_path)
