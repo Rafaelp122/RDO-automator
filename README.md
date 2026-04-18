@@ -19,9 +19,9 @@ O grande diferencial deste projeto é sua arquitetura agnóstica: através de um
 
 O projeto segue uma estrutura de **Arquitetura em Camadas (Layered Architecture)**, garantindo a separação de responsabilidades para facilitar a manutenção:
 
-*   **Core:** Camada de domínio contendo a lógica de negócio pura (processamento de texto e regras de formatação), sem dependências externas de I/O.
-*   **Infra:** Camada de infraestrutura responsável pela comunicação com o mundo externo (leitura/escrita de arquivos Excel e gerenciamento de configurações).
-*   **UI:** Camada de apresentação que gerencia a interface visual e a interação com o usuário.
+*   **Core:** Camada de domínio contendo a lógica de negócio pura, processamento de texto e **sistema centralizado de logging**.
+*   **Infra:** Camada de infraestrutura responsável pela comunicação com o mundo externo (leitura/escrita de arquivos Excel, logs de arquivo e gerenciamento de configurações).
+*   **UI:** Camada de apresentação que gerencia a interface visual, a interação com o usuário e o rastreamento de threads em background.
 
 
 ## Tecnologias Utilizadas
@@ -29,12 +29,24 @@ O projeto segue uma estrutura de **Arquitetura em Camadas (Layered Architecture)
 | Tecnologia | Finalidade |
 | :--- | :--- |
 | Python 3.11+ | Linguagem principal |
+| Logging | Sistema nativo para rastreabilidade e depuração |
 | Pandas | Manipulação e análise de dados brutos |
 | Openpyxl | Manipulação de templates e preservação de estilos Excel |
 | PySide6 | Interface gráfica nativa e moderna |
 | TOML | Gerenciamento de configurações e mapeamento |
-| PyInstaller | Empacotamento para executável Windows (.exe) |
-| GitHub Actions | CI/CD para build automatizado do binário |
+
+## Observabilidade e Logging
+
+O projeto implementa um sistema de logging profissional para garantir a rastreabilidade total de cada operação:
+
+*   **Logs em Tempo Real:** O terminal exibe eventos críticos, sucessos e avisos durante a execução.
+*   **Persistência de Logs:** Todos os eventos (INFO, DEBUG, ERROR) são salvos automaticamente no diretório `logs/app.log`.
+*   **Rastreamento de Processos:**
+    *   **ETL:** Cada etapa da geração do Excel (leitura, clonagem de abas, salvamento) é registrada.
+    *   **Threads:** O ciclo de vida das tarefas em background (Workers) é monitorado.
+    *   **Configuração:** Falhas na leitura do arquivo `config.toml` são detalhadas no log.
+
+Caso ocorra algum erro inesperado, verifique o arquivo `logs/app.log` para um diagnóstico detalhado.
 
 ## Como Utilizar
 
