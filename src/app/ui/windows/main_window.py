@@ -1,6 +1,6 @@
 import os
 import subprocess
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMessageBox
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMessageBox, QFileDialog
 from PySide6.QtCore import Slot
 
 from src.app.ui.workers.processor_worker import ProcessorWorker
@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         self.config = self.config_manager.load_config()
         
         self.setWindowTitle("Report Automator v1.0")
-        self.setFixedSize(600, 800)
+        self.setMinimumSize(800, 800)
         self._load_styles()
         
         # Lista de threads para evitar que o Python as delete prematuramente
@@ -47,6 +47,8 @@ class MainWindow(QMainWindow):
         self.processing_panel.start_requested.connect(self.iniciar_processamento)
         self.processing_panel.revalidate_requested.connect(self.executar_validacao)
         self.processing_panel.config_save_requested.connect(self.salvar_configuracao)
+        self.processing_panel.import_config_requested.connect(self.importar_configuracao)
+        self.processing_panel.export_config_requested.connect(self.exportar_configuracao)
         
         # Inicializa campos com config atual
         self.processing_panel.set_config_values(
@@ -68,14 +70,71 @@ class MainWindow(QMainWindow):
     def salvar_configuracao(self, novos_dados):
         try:
             self.config['arquivos'].update(novos_dados['arquivos'])
-            self.config['mapeamento'] = novos_dados['mapeamento']
+            self.config['mapeamento'] = novos_dados.get('mapeamento', {})
             self.config_manager.save_config(self.config)
             logger.info("Configuração persistida com sucesso.")
-            QMessageBox.information(self, "Sucesso", "Configuração salva!")
+            QMessageBox.information(self, "Sucesso", "Configuração salva localmente!")
             self.executar_validacao()
         except Exception as e:
             logger.error(f"Falha ao salvar config: {e}")
             QMessageBox.critical(self, "Erro", f"Falha ao salvar configuração: {e}")
+
+    def importar_configuracao(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Importar Configuração TOML", "", "Config Files (*.toml)"
+        )
+        if not file_path:
+            return
+
+        try:
+            import tomllib
+            with open(file_path, "rb") as f:
+                nova_config = tomllib.load(f)
+            
+            # Validação básica
+            if 'arquivos' not in nova_config or 'mapeamento' not in nova_config:
+                raise ValueError("Arquivo TOML inválido: chaves obrigatórias ausentes.")
+
+            self.config = nova_config
+            self.config_manager.save_config(self.config) # Sobrescreve o config.toml local
+            
+            # Atualiza UI
+            self.processing_panel.set_config_values(
+                self.config['arquivos'].get('dados_origem', ''),
+                self.config['arquivos'].get('user_template', ''),
+                self.config.get('mapeamento', {})
+            )
+            
+            logger.info(f"Configuração importada de {file_path}")
+            QMessageBox.information(self, "Sucesso", "Configuração importada com sucesso!")
+            self.executar_validacao()
+        except Exception as e:
+            logger.error(f"Erro ao importar config: {e}")
+            QMessageBox.critical(self, "Erro na Importação", f"Não foi possível carregar o arquivo: {e}")
+
+    def exportar_configuracao(self, dados_ui):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Exportar Configuração TOML", "config_export.toml", "Config Files (*.toml)"
+        )
+        if not file_path:
+            return
+
+        try:
+            import tomli_w
+            # Usamos os dados atuais da UI para garantir que exportamos o que o usuário vê
+            config_para_exportar = {
+                "arquivos": dados_ui['arquivos'],
+                "mapeamento": dados_ui['mapeamento']
+            }
+            
+            with open(file_path, "wb") as f:
+                tomli_w.dump(config_para_exportar, f)
+            
+            logger.info(f"Configuração exportada para {file_path}")
+            QMessageBox.information(self, "Sucesso", "Configuração exportada com sucesso!")
+        except Exception as e:
+            logger.error(f"Erro ao exportar config: {e}")
+            QMessageBox.critical(self, "Erro na Exportação", f"Não foi possível salvar o arquivo: {e}")
 
     def _load_styles(self):
         try:
@@ -177,8 +236,8 @@ class MainWindow(QMainWindow):
         else: # macOS/Linux
             try:
                 subprocess.run(['xdg-open', caminho])
-            except:
-                logger.warning("Não foi possível abrir a pasta automaticamente.")
+            except Exception as e:
+                logger.warning(f"Não foi possível abrir a pasta automaticamente: {e}")
 
     @Slot(str)
     def finalizar_erro(self, msg):
