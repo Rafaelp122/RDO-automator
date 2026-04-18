@@ -9,6 +9,8 @@ class ProcessingPanel(QFrame):
     start_requested = Signal()
     revalidate_requested = Signal()
     config_save_requested = Signal(dict)
+    import_config_requested = Signal()
+    export_config_requested = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -50,11 +52,25 @@ class ProcessingPanel(QFrame):
         mapping_btns.addWidget(btn_remove)
         layout.addLayout(mapping_btns)
 
-        # Save Config Button
-        self.btn_save_config = QPushButton("SALVAR CONFIGURAÇÃO")
+        # Config Buttons Area
+        config_btns_layout = QHBoxLayout()
+        
+        self.btn_save_config = QPushButton("SALVAR")
         self.btn_save_config.setObjectName("SecondaryButton")
         self.btn_save_config.clicked.connect(self._handle_save_config)
-        layout.addWidget(self.btn_save_config)
+        
+        self.btn_import_config = QPushButton("IMPORTAR")
+        self.btn_import_config.setObjectName("SecondaryButton")
+        self.btn_import_config.clicked.connect(self.import_config_requested.emit)
+        
+        self.btn_export_config = QPushButton("EXPORTAR")
+        self.btn_export_config.setObjectName("SecondaryButton")
+        self.btn_export_config.clicked.connect(self._handle_export_config)
+        
+        config_btns_layout.addWidget(self.btn_save_config)
+        config_btns_layout.addWidget(self.btn_import_config)
+        config_btns_layout.addWidget(self.btn_export_config)
+        layout.addLayout(config_btns_layout)
 
         # Log View
         self.log_console = LogView(initial_text="Aguardando validação inicial...")
@@ -113,6 +129,14 @@ class ProcessingPanel(QFrame):
             self.mapping_table.removeRow(row_count - 1)
 
     def _handle_save_config(self):
+        config_data = self._get_current_config_from_ui()
+        self.config_save_requested.emit(config_data)
+
+    def _handle_export_config(self):
+        config_data = self._get_current_config_from_ui()
+        self.export_config_requested.emit(config_data)
+
+    def _get_current_config_from_ui(self):
         # Coleta mapeamento da tabela
         mapeamento = {}
         for row in range(self.mapping_table.rowCount()):
@@ -124,14 +148,13 @@ class ProcessingPanel(QFrame):
                 if aba and celula:
                     mapeamento[aba] = celula
 
-        config_data = {
+        return {
             "arquivos": {
                 "dados_origem": self.input_origin.text(),
                 "user_template": self.input_template.text()
             },
             "mapeamento": mapeamento
         }
-        self.config_save_requested.emit(config_data)
 
     def set_config_values(self, origin, template, mapeamento=None):
         self.input_origin.setText(origin)
