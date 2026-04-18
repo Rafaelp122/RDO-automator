@@ -1,0 +1,52 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12' # Using a stable version for build
+        
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.ps1 | iex
+      
+    - name: Install dependencies
+      run: uv sync
+      
+    - name: Build Executable
+      run: |
+        uv run pyinstaller --noconfirm --onefile --windowed --name "ReportAutomator" --add-data "assets;assets" --add-data "src/app/ui/styles;src/app/ui/styles" --hidden-import "PySide6.QtXml" main.py
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ReportAutomator-Windows
+        path: dist/ReportAutomator.exe
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ReportAutomator-Windows
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ReportAutomator.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
