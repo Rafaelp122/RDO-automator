@@ -13,7 +13,9 @@ O sistema não deve depender de caminhos fixos definidos manualmente no código 
 ## 2. Persistência de Configuração
 Permitir que o usuário personalize o mapeamento sem precisar editar arquivos de texto.
 
-*   **Botão "Salvar Configuração":** Interface para editar quais colunas da origem vão para quais células do destino, com um botão dedicado para persistir essas escolhas no arquivo `config.toml`.
+*   **Botão "Salvar":** Interface para editar quais colunas da origem vão para quais células do destino, com um botão dedicado para persistir essas escolhas no arquivo `config.toml` local.
+*   **Botão "Importar Configuração":** Permite carregar um arquivo `.toml` externo, facilitando a troca rápida entre diferentes perfis de mapeamento ou configurações compartilhadas.
+*   **Botão "Exportar Configuração":** Permite salvar o mapeamento atual da interface em um novo arquivo `.toml` em qualquer local do computador, servindo como backup ou template para outros projetos.
 
 ## 3. Validação e Segurança (Robustez)
 Prevenção de erros comuns que causam o fechamento inesperado (crash) do programa.

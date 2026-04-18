@@ -12,8 +12,8 @@ O grande diferencial deste projeto é sua arquitetura agnóstica: através de um
     *   Correção automática de capitalização (Title Case).
     *   Preservação de siglas técnicas em caixa alta (LED, PCD, BHLS).
     *   Padronização de preposições em caixa baixa.
-*   **Configuração via TOML:** Flexibilidade total sem necessidade de alterar o código-fonte.
-*   **Interface Gráfica (GUI):** Construída com PySide6 para uma experiência nativa e moderna.
+*   **Configuração Dinâmica:** Gerenciamento total via interface (Salvar, Importar e Exportar perfis TOML) sem necessidade de alterar o código-fonte.
+*   **Interface Gráfica (GUI):** Construída com PySide6 para uma experiência nativa, moderna e responsiva.
 
 ## Arquitetura do Projeto
 
