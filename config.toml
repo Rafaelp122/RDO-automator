@@ -1,0 +1,28 @@
+# Configurações do Report Automator
+
+[projeto]
+nome = "Diário de Obra Automatizado"
+autor = "Rafael Araújo"
+mes = 3
+ano = 2026
+
+[arquivos]
+# O sistema prioriza o user_template se ele existir em data/input/
+default_template = "assets/template.xlsx"
+user_template = "data/input/user_template.xlsx"
+dados_origem = "data/input/medicao.xlsx"
+
+[posicoes]
+celula_data = "E3" # Célula onde a data do dia será escrita
+
+[colunas]
+data = "Data"
+servico = "Descrição do serviço"
+bairro = "Bairro"
+
+[mapeamento]
+# Aba na Origem = Célula no Template
+semaforica = "B10"
+manual = "B15"
+mecanica = "B20"
+vertical = "B25"
