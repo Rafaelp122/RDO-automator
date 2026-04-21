@@ -39,7 +39,6 @@ class FileSelector(QWidget):
             self, "Selecionar Arquivo Excel", "", "Excel Files (*.xlsx *.xls)"
         )
         if file_path:
-            self.line_edit.setText(file_path)
             self.file_selected.emit(file_path)
 
     def text(self):

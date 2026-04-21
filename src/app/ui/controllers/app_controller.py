@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 from PySide6.QtCore import QObject, Slot
@@ -34,6 +35,7 @@ class AppController(QObject):
         panel.import_config_requested.connect(self.importar_configuracao)
         panel.export_config_requested.connect(self.exportar_configuracao)
         panel.origin_selected.connect(self.atualizar_origem_automatica)
+        panel.template_selected.connect(self.atualizar_template_automatico)
 
     def _initialize_view(self):
         self.view.processing_panel.set_config_values(
@@ -60,13 +62,45 @@ class AppController(QObject):
 
     def atualizar_origem_automatica(self, file_path):
         try:
-            self.config['arquivos']['dados_origem'] = file_path
+            new_path = self._importar_arquivo(file_path)
+            self.config['arquivos']['dados_origem'] = new_path
             self.config_manager.save_config(self.config)
-            logger.info(f"Origem atualizada automaticamente para: {file_path}")
+            self.view.processing_panel.input_origin.setText(new_path)
+            logger.info(f"Origem importada e atualizada para: {new_path}")
             self.executar_validacao()
         except Exception as e:
-            logger.error(f"Falha ao atualizar origem automaticamente: {e}")
-            QMessageBox.warning(self.view, "Aviso", f"Não foi possível salvar o novo caminho automaticamente: {e}")
+            logger.error(f"Falha ao importar origem automaticamente: {e}")
+            QMessageBox.warning(self.view, "Aviso", f"Não foi possível importar o arquivo: {e}")
+
+    def atualizar_template_automatico(self, file_path):
+        try:
+            new_path = self._importar_arquivo(file_path)
+            self.config['arquivos']['user_template'] = new_path
+            self.config_manager.save_config(self.config)
+            self.view.processing_panel.input_template.setText(new_path)
+            logger.info(f"Template importado e atualizado para: {new_path}")
+            self.executar_validacao()
+        except Exception as e:
+            logger.error(f"Falha ao importar template automaticamente: {e}")
+            QMessageBox.warning(self.view, "Aviso", f"Não foi possível importar o arquivo: {e}")
+
+    def _importar_arquivo(self, source_path):
+        """Copia o arquivo selecionado para a pasta data/input e retorna o novo caminho."""
+        if not source_path:
+            return ""
+
+        target_dir = os.path.join("data", "input")
+        os.makedirs(target_dir, exist_ok=True)
+        
+        filename = os.path.basename(source_path)
+        target_path = os.path.join(target_dir, filename)
+
+        # Se o arquivo já estiver lá e for o mesmo, não faz nada
+        if os.path.exists(target_path) and os.path.abspath(source_path) == os.path.abspath(target_path):
+            return target_path
+
+        shutil.copy2(source_path, target_path)
+        return target_path
 
     def importar_configuracao(self):
         file_path, _ = QFileDialog.getOpenFileName(

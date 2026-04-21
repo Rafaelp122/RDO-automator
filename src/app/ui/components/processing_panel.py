@@ -16,6 +16,7 @@ class ProcessingPanel(QFrame):
     import_config_requested = Signal()
     export_config_requested = Signal(dict)
     origin_selected = Signal(str)
+    template_selected = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -33,6 +34,7 @@ class ProcessingPanel(QFrame):
         self.input_origin.file_selected.connect(self.origin_selected.emit)
         
         self.input_template = FileSelector("Template Excel (Visual):")
+        self.input_template.file_selected.connect(self.template_selected.emit)
 
         layout.addWidget(self.input_origin)
         layout.addWidget(self.input_template)
