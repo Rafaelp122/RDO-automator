@@ -57,17 +57,38 @@ class TextProcessor:
         return " ".join(resultado)
 
     @classmethod
-    def formatar_resumo(cls, lista_servicos, lista_bairros=None):
-        """Consolida serviços e bairros em uma frase natural."""
-        servicos_limpos = sorted(list(set(cls.corrigir_capitalizacao(s) for s in lista_servicos if s)))
-        
-        if not servicos_limpos:
+    def formatar_resumo(cls, dados_extraidos, formato_final, separador_lista=", ", conector_final=" e "):
+        """
+        Gera a frase final baseada no template, aplicando regras de pluralização.
+        dados_extraidos: dict onde as chaves são as colunas (ex: 'Serviço') e os valores são listas de strings.
+        """
+        if not formato_final or not dados_extraidos:
             return ""
 
-        resumo = ", ".join(servicos_limpos[:-1])
-        if resumo:
-            resumo += f" e {servicos_limpos[-1]}"
-        else:
-            resumo = servicos_limpos[0]
+        texto_resultado = formato_final
+        
+        for coluna, lista_valores in dados_extraidos.items():
+            # Limpa e remove duplicatas
+            valores_limpos = sorted(list(set(cls.corrigir_capitalizacao(str(v)) for v in lista_valores if v)))
             
-        return resumo
+            # Monta a string da lista
+            if not valores_limpos:
+                string_valores = ""
+                is_plural = False
+            else:
+                string_valores = separador_lista.join(valores_limpos[:-1])
+                if string_valores:
+                    string_valores += f"{conector_final}{valores_limpos[-1]}"
+                else:
+                    string_valores = valores_limpos[0]
+                is_plural = len(valores_limpos) > 1
+
+            # Substituição dos valores brutos
+            texto_resultado = texto_resultado.replace(f"{{{coluna}}}", string_valores)
+            
+            # Tratamento de plurais (ex: {Chave:s}, {Chave:es}, {Chave:nos})
+            texto_resultado = texto_resultado.replace(f"{{{coluna}:s}}", "s" if is_plural else "")
+            texto_resultado = texto_resultado.replace(f"{{{coluna}:es}}", "es" if is_plural else "")
+            texto_resultado = texto_resultado.replace(f"{{{coluna}:nos}}", "s" if is_plural else "")
+            
+        return texto_resultado

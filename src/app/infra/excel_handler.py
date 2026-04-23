@@ -27,16 +27,15 @@ class ExcelHandler:
         # Lê todas as abas de origem de uma vez para performance
         abas_origem = pd.read_excel(caminho_dados, sheet_name=None, header=linha_header)
         
-        # Pré-processamento: Normalização de dados (Data e Bairro) uma única vez
-        secao_colunas = self.config.get('colunas', {})
-        col_data = secao_colunas.get('data', 'Data')
-        col_bairro = secao_colunas.get('bairro')
-        
+        # Pré-processamento: Normalização de dados
         for nome_aba, df in abas_origem.items():
-            if col_data in df.columns:
-                df[col_data] = pd.to_datetime(df[col_data], errors='coerce')
-            if col_bairro and col_bairro in df.columns:
-                df[col_bairro] = df[col_bairro].ffill()
+            col_data_nome = 'Data'
+            for col in df.columns:
+                if 'data' in str(col).lower():
+                    col_data_nome = col
+                    break
+            if col_data_nome in df.columns:
+                df[col_data_nome] = pd.to_datetime(df[col_data_nome], errors='coerce')
         
         # Carrega o template (preservando estilos e fórmulas)
         if not os.path.exists(caminho_template) or os.path.getsize(caminho_template) == 0:
@@ -56,41 +55,77 @@ class ExcelHandler:
         mes = self.config.get('projeto', {}).get('mes', datetime.now().month)
         _, ultimo_dia = calendar.monthrange(ano, mes)
 
+        # Cálculos de Datas do Contrato
+        data_inicio_str = self.config.get('contrato', {}).get('data_inicio')
+        if data_inicio_str:
+            data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d')
+        else:
+            data_inicio = datetime(ano, mes, 1)
+        
+        prazo_dias = self.config.get('contrato', {}).get('prazo_dias', 0)
+        from datetime import timedelta
+        data_final = data_inicio + timedelta(days=prazo_dias)
+
         logger.info(f"Iniciando loop diário para o mês {mes}/{ano} ({ultimo_dia} abas)")
         for dia in range(1, ultimo_dia + 1):
             if progress_callback:
                 progresso = int((dia / ultimo_dia) * 100)
                 progress_callback(progresso)
 
-            data_atual = pd.Timestamp(year=ano, month=mes, day=dia)
+            data_atual = datetime(ano, mes, dia)
             data_str = data_atual.strftime('%d-%m')
             
             # 1. Cria nova aba clonando o layout do template
             nova_ws = wb.copy_worksheet(ws_template)
             nova_ws.title = data_str
             
-            # 2. Escreve a data na célula configurada
-            celula_data = self.config.get('posicoes', {}).get('celula_data', 'A1')
-            nova_ws[celula_data] = data_atual.strftime('%d/%m/%Y')
+            # 2. Metadados do Contrato e Posições Fixas
+            posicoes = self.config.get('posicoes', {})
+            
+            if posicoes.get('celula_data_inicio'):
+                nova_ws[posicoes['celula_data_inicio']] = data_inicio.strftime('%d/%m/%Y')
+            if posicoes.get('celula_prazo_dias'):
+                nova_ws[posicoes['celula_prazo_dias']] = f"{prazo_dias} dias"
+            if posicoes.get('celula_data_final'):
+                nova_ws[posicoes['celula_data_final']] = data_final.strftime('%d/%m/%Y')
+            if posicoes.get('celula_data_atual'):
+                nova_ws[posicoes['celula_data_atual']] = data_atual.strftime('%d/%m/%Y')
+            if posicoes.get('celula_tempo_decorrido'):
+                delta = data_atual - data_inicio
+                tempo_decorrido = delta.days + 1
+                nova_ws[posicoes['celula_tempo_decorrido']] = f"{tempo_decorrido} dias"
 
             # 3. Processa cada mapeamento configurado
             mapeamentos = self.config.get('mapeamento', {})
+            extracao = self.config.get('extração', {})
+            colunas_esperadas = extracao.get('colunas', [])
+            formato_final = extracao.get('formato_final', '')
+            sep = extracao.get('separador_lista', ', ')
+            con = extracao.get('conector_final', ' e ')
+
             for nome_aba_origem, celula_destino in mapeamentos.items():
                 if nome_aba_origem in abas_origem:
                     df = abas_origem[nome_aba_origem]
                     
-                    # Filtra os serviços do dia
-                    if col_data in df.columns:
-                        filtro = df[df[col_data].dt.day == dia]
+                    col_data_nome = 'Data'
+                    for col in df.columns:
+                        if 'data' in str(col).lower():
+                            col_data_nome = col
+                            break
+                            
+                    if col_data_nome in df.columns:
+                        filtro = df[df[col_data_nome].dt.day == dia]
                     else:
                         filtro = pd.DataFrame()
                     
                     if not filtro.empty:
-                        col_servico = self.config['colunas'].get('servico', 'Descrição do serviço')
-                        servicos = filtro[col_servico].unique()
+                        dados_extraidos = {}
+                        for col in colunas_esperadas:
+                            if col in filtro.columns:
+                                val_unicos = filtro[col].dropna().unique().tolist()
+                                dados_extraidos[col] = val_unicos
                         
-                        # Usa o processador core para formatar o resumo
-                        resumo = TextProcessor.formatar_resumo(servicos)
+                        resumo = TextProcessor.formatar_resumo(dados_extraidos, formato_final, sep, con)
                         nova_ws[celula_destino] = resumo
                     else:
                         # RN01: Se não há dados, garante que a célula mapeada esteja vazia

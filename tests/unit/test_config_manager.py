@@ -19,8 +19,8 @@ class TestConfigManager:
 
     def test_load_config_file_not_found(self):
         manager = ConfigManager("non_existent.toml")
-        with pytest.raises(FileNotFoundError):
-            manager.load_config()
+        config = manager.load_config()
+        assert config['projeto']['mes'] is not None
 
     def test_save_config(self, tmp_path):
         path = tmp_path / "save_test.toml"

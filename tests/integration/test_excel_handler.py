@@ -47,11 +47,10 @@ def test_gerar_diario_completo(temp_excel_files, monkeypatch):
             'dados_origem': temp_excel_files['origin'],
             'template_ativo': temp_excel_files['template']
         },
-        'posicoes': {'celula_data': 'E3'},
-        'colunas': {
-            'data': 'Data',
-            'servico': 'Descrição do serviço',
-            'bairro': 'Bairro'
+        'posicoes': {'celula_data_atual': 'E3'},
+        'extração': {
+            'colunas': ['Data', 'Bairro', 'Descrição do serviço'],
+            'formato_final': '{Descrição do serviço}'
         },
         'mapeamento': {
             'semaforica': 'B10',
@@ -124,10 +123,10 @@ def test_deduplicacao_servicos(temp_excel_files):
             'dados_origem': str(origin_path),
             'template_ativo': temp_excel_files['template']
         },
-        'posicoes': {'celula_data': 'E3'},
-        'colunas': {
-            'data': 'Data',
-            'servico': 'Descrição do serviço'
+        'posicoes': {'celula_data_atual': 'E3'},
+        'extração': {
+            'colunas': ['Data', 'Descrição do serviço'],
+            'formato_final': '{Descrição do serviço}'
         },
         'mapeamento': {'manual': 'B15'}
     }
@@ -164,7 +163,7 @@ def test_limite_dias_mes(temp_excel_files, ano, mes, esperado):
             'template_ativo': temp_excel_files['template']
         },
         'posicoes': {},
-        'colunas': {'data': 'Data'},
+        'extração': {'colunas': ['Data']},
         'mapeamento': {}
     }
 
@@ -201,8 +200,11 @@ def test_geracao_aba_sem_dados(temp_excel_files):
             'dados_origem': str(origin_path),
             'template_ativo': temp_excel_files['template']
         },
-        'posicoes': {'celula_data': 'E3'},
-        'colunas': {'data': 'Data', 'servico': 'Descrição do serviço'},
+        'posicoes': {'celula_data_atual': 'E3'},
+        'extração': {
+            'colunas': ['Data', 'Descrição do serviço'],
+            'formato_final': '{Descrição do serviço}'
+        },
         'mapeamento': {'manual': 'B15'}
     }
 

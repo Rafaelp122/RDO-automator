@@ -16,16 +16,23 @@ class TestTextProcessor:
         assert TextProcessor.corrigir_capitalizacao(input_text) == expected
 
     def test_formatar_resumo_simples(self):
-        servicos = ["Pintura", "LIMPEZA"]
-        resultado = TextProcessor.formatar_resumo(servicos)
+        dados = {"Serviço": ["Pintura", "LIMPEZA"]}
+        formato = "Realizamos o{Serviço:s} serviço{Serviço:s}: {Serviço}."
+        resultado = TextProcessor.formatar_resumo(dados, formato)
         # sorted: Limpeza, Pintura
-        assert resultado == "Limpeza e Pintura"
+        assert resultado == "Realizamos os serviços: Limpeza e Pintura."
 
-    def test_formatar_resumo_multiplos(self):
-        servicos = ["instalação de led", "manutenção", "limpeza"]
-        resultado = TextProcessor.formatar_resumo(servicos)
-        # sorted: Instalação de LED, Limpeza, Manutenção
-        assert resultado == "Instalação de LED, Limpeza e Manutenção"
+    def test_formatar_resumo_singular(self):
+        dados = {"Serviço": ["Pintura"]}
+        formato = "Realizamos o{Serviço:s} serviço{Serviço:s}: {Serviço}."
+        resultado = TextProcessor.formatar_resumo(dados, formato)
+        assert resultado == "Realizamos o serviço: Pintura."
+
+    def test_formatar_resumo_nos_plural(self):
+        dados = {"Serviço": ["Pintura"], "Bairro": ["Centro", "Tijuca"]}
+        formato = "Serviço{Serviço:s} {Serviço} realizado{Serviço:s} no{Bairro:nos} bairro{Bairro:s} {Bairro}."
+        resultado = TextProcessor.formatar_resumo(dados, formato)
+        assert resultado == "Serviço Pintura realizado nos bairros Centro e Tijuca."
 
     def test_formatar_resumo_vazio(self):
-        assert TextProcessor.formatar_resumo([]) == ""
+        assert TextProcessor.formatar_resumo({}, "") == ""

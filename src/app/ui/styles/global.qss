@@ -1,0 +1,135 @@
+/* Global Application Styles */
+
+QMainWindow {
+    background-color: #F7F9FC;
+}
+
+QScrollArea, #ScrollContent, #qt_scrollarea_viewport {
+    background-color: #F7F9FC;
+}
+
+QLabel {
+    color: #1E293B;
+}
+
+QWidget {
+    margin: 0px;
+    padding: 0px;
+}
+
+QTableWidget {
+    background-color: #FFFFFF;
+    gridline-color: #CBD5E1;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    color: #1E293B;
+    font-size: 12px;
+}
+
+QHeaderView::section {
+    background-color: #3F51B5;
+    color: white;
+    padding: 4px;
+    border: 1px solid #303F9F;
+    font-weight: bold;
+}
+
+QTableWidget QTableCornerButton::section {
+    background-color: #3F51B5;
+    border: 1px solid #303F9F;
+}
+
+QTableWidget::item {
+    padding: 5px;
+}
+
+QTableWidget::item:selected {
+    background-color: #E2E8F0;
+    color: #1E293B;
+}
+
+QLineEdit, QSpinBox, QDateEdit, QPlainTextEdit {
+    background-color: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 12px;
+    color: #334155;
+}
+
+QSpinBox::up-button, QSpinBox::down-button, QDateEdit::drop-down {
+    background-color: #E2E8F0;
+    border-left: 1px solid #CBD5E1;
+    width: 24px;
+}
+
+QSpinBox::up-arrow {
+    image: url(src/app/ui/assets/up_arrow.svg);
+    width: 10px;
+    height: 10px;
+}
+
+QSpinBox::down-arrow, QDateEdit::down-arrow {
+    image: url(src/app/ui/assets/down_arrow.svg);
+    width: 10px;
+    height: 10px;
+}
+
+QDateEdit::drop-down {
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+
+QSpinBox::up-button {
+    border-top-right-radius: 7px;
+    border-bottom: 1px solid #CBD5E1;
+}
+
+QSpinBox::down-button {
+    border-bottom-right-radius: 7px;
+}
+
+QSpinBox::up-button:hover, QSpinBox::down-button:hover, QDateEdit::drop-down:hover {
+    background-color: #CBD5E1;
+}
+
+QPushButton {
+    background-color: #3F51B5;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    height: 30px;
+}
+
+QPushButton:hover {
+    background-color: #303F9F;
+}
+
+QPushButton:pressed {
+    background-color: #1A237E;
+}
+
+QProgressBar {
+    border: none;
+    background-color: #E2E8F0;
+    height: 6px;
+    text-align: center;
+    border-radius: 3px;
+}
+
+QProgressBar::chunk {
+    background-color: #3F51B5;
+    border-radius: 3px;
+}
+
+QScrollBar:vertical {
+    background: #E2E8F0;
+}
+
+QScrollBar::handle:vertical {
+    background: #3F51B5;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    background: none;
+}

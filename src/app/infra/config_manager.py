@@ -6,13 +6,52 @@ class ConfigManager:
     """Gerencia a leitura e escrita do arquivo config.toml"""
     def __init__(self, config_path="config.toml"):
         self.config_path = config_path
-        self.config = {}
+        self.config = self._get_default_config()
+
+    def _get_default_config(self):
+        """Retorna a estrutura base (schema v2.0) caso o arquivo não exista"""
+        return {
+            "projeto": {
+                "nome": "Novo Relatório",
+                "mes": 1,
+                "ano": 2026
+            },
+            "arquivos": {
+                "linha_cabecalho": 0,
+                "dados_origem": "",
+                "user_template": ""
+            },
+            "contrato": {
+                "data_inicio": "2026-01-01",
+                "prazo_dias": 365
+            },
+            "extração": {
+                "colunas": [],
+                "separador_lista": ", ",
+                "conector_final": " e ",
+                "formato_final": ""
+            },
+            "posicoes": {
+                "celula_data_inicio": "",
+                "celula_prazo_dias": "",
+                "celula_data_final": "",
+                "celula_data_atual": "",
+                "celula_tempo_decorrido": ""
+            },
+            "mapeamento": {}
+        }
 
     def load_config(self):
         try:
             with open(self.config_path, "rb") as f:
-                self.config = tomllib.load(f)
+                loaded = tomllib.load(f)
+                # Opcional: fazer um merge da configuração padrão com a carregada
+                self.config.update(loaded)
             logger.info(f"Configuração carregada com sucesso de: {self.config_path}")
+            return self.config
+        except FileNotFoundError:
+            logger.warning(f"Arquivo {self.config_path} não encontrado. Usando configuração padrão (v2.0).")
+            self.save_config() # Cria o arquivo padrão
             return self.config
         except Exception as e:
             logger.error(f"Erro ao carregar configuração ({self.config_path}): {e}")

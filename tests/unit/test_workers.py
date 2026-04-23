@@ -36,15 +36,12 @@ class TestProcessorWorker:
 
     def test_run_config_missing(self, qtbot, tmp_path):
         os.chdir(tmp_path)
-        # config.toml NOT created
-        
+        # config missing -> vai pegar valores vazios
         worker = ProcessorWorker()
-        
         with qtbot.waitSignal(worker.error, timeout=2000) as blocker:
             worker.run()
-            
-        # Error message comes from ConfigManager now
-        assert "Arquivo ou diretório inexistente" in blocker.args[0]
+        
+        assert "Arquivo de dados não encontrado" in blocker.args[0]
 
     def test_run_data_file_missing(self, qtbot, tmp_path):
         os.chdir(tmp_path)

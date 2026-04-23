@@ -23,14 +23,13 @@ class TestValidationWorker:
                 'dados_origem': 'dados.xlsx',
             },
             'posicoes': {
-                'celula_data': 'INVALID'
+                'celula_data_atual': 'INVALID'
             },
             'mapeamento': {
                 'teste': 'B10'
             },
-            'colunas': {
-                'data': 'Data',
-                'servico': 'Servico'
+            'extração': {
+                'colunas': ['Data', 'Servico']
             }
         }
         with open("config.toml", "wb") as f:
@@ -44,4 +43,4 @@ class TestValidationWorker:
             
         sucesso, erros = blocker.args
         assert sucesso is False
-        assert any("Célula da data 'INVALID' é inválida" in e for e in erros)
+        assert any("configurada para" in e and "inválida" in e for e in erros)

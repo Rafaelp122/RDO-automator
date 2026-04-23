@@ -12,9 +12,9 @@ class TestValidationScenarios:
         os.chdir(tmp_path)
         config = {
             'arquivos': {'dados_origem': 'non_existent.xlsx'},
-            'posicoes': {'celula_data': 'E3'},
+            'posicoes': {'celula_data_atual': 'E3'},
             'mapeamento': {'aba1': 'B10'},
-            'colunas': {'data': 'Data', 'servico': 'Servico'}
+            'extração': {'colunas': ['Data', 'Servico']}
         }
         with open("config.toml", "wb") as f:
             f.write(tomli_w.dumps(config).encode())
@@ -35,9 +35,9 @@ class TestValidationScenarios:
         
         config = {
             'arquivos': {'dados_origem': str(data_path)},
-            'posicoes': {'celula_data': 'E3'},
+            'posicoes': {'celula_data_atual': 'E3'},
             'mapeamento': {'AbaInexistente': 'B10'},
-            'colunas': {'data': 'Data', 'servico': 'Servico'}
+            'extração': {'colunas': ['Data', 'Servico']}
         }
         with open("config.toml", "wb") as f:
             f.write(tomli_w.dumps(config).encode())
@@ -57,9 +57,9 @@ class TestValidationScenarios:
         
         config = {
             'arquivos': {'dados_origem': str(data_path)},
-            'posicoes': {'celula_data': 'E3'},
+            'posicoes': {'celula_data_atual': 'E3'},
             'mapeamento': {'Aba1': 'B10'},
-            'colunas': {'data': 'Data', 'servico': 'Servico'}
+            'extração': {'colunas': ['Data', 'Servico']}
         }
         with open("config.toml", "wb") as f:
             f.write(tomli_w.dumps(config).encode())
@@ -90,8 +90,8 @@ class TestExcelHandlerErrorScenarios:
                 'dados_origem': str(data_path),
                 'template_ativo': str(template_path)
             },
-            'posicoes': {'celula_data': 'A1'},
-            'colunas': {'data': 'Data', 'servico': 'Servico'},
+            'posicoes': {'celula_data_atual': 'A1'},
+            'extração': {'colunas': ['Data', 'Servico']},
             'mapeamento': {'aba1': 'B1'}
         }
         
