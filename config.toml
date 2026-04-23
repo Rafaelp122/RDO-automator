@@ -1,12 +1,13 @@
 [projeto]
-mes = 1
+nome = "Novo Relatório"
+mes = 6
 ano = 2027
 
 [arquivos]
 linha_cabecalho = 4
-default_template = "assets/template.xlsx"
-user_template = "data/input/user_template.xlsx"
 dados_origem = "data/input/PLANILHA_DE_MEDIÇÃO_GRUPO_2_CONTR_07-2024_-_MED_05-12_MES_02-26.xlsx"
+user_template = "data/input/user_template.xlsx"
+template_ativo = ""
 
 [contrato]
 data_inicio = "2026-01-01"
@@ -19,7 +20,6 @@ conector_final = " e "
 formato_final = ""
 
 [posicoes]
-celula_data = "E3"
 celula_data_inicio = ""
 celula_prazo_dias = ""
 celula_data_final = ""
@@ -31,8 +31,3 @@ manual = "B15"
 mecanica = "B20"
 semaforica = "B10"
 vertical = "B25"
-
-[colunas]
-data = "Data"
-servico = "Descrição do serviço"
-bairro = "Bairro"
