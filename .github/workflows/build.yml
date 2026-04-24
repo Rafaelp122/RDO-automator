@@ -26,13 +26,13 @@ jobs:
       
     - name: Build Executable
       run: |
-        uv run pyinstaller --noconfirm --onefile --windowed --name "ReportAutomator" --add-data "assets;assets" --add-data "src/app/ui/styles;src/app/ui/styles" --hidden-import "PySide6.QtXml" main.py
+        uv run python build_exe.py
         
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ReportAutomator-Windows
-        path: dist/ReportAutomator.exe
+        name: RDO_Automator-Windows
+        path: dist/RDO_Automator/
 
   release:
     needs: build
@@ -42,11 +42,15 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ReportAutomator-Windows
+          name: RDO_Automator-Windows
+          path: RDO_Automator
           
+      - name: Zip Release
+        run: zip -r RDO_Automator_Windows.zip RDO_Automator/
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ReportAutomator.exe
+          files: RDO_Automator_Windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
