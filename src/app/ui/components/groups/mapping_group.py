@@ -68,7 +68,7 @@ class MappingGroup(QGroupBox):
             item_aba = self.table.item(row, 0)
             item_celula = self.table.item(row, 1)
             if item_aba and item_celula:
-                aba = item_aba.text().strip()
+                aba = item_aba.text()
                 celula = item_celula.text().strip().upper()
                 if aba and celula:
                     mapeamento[aba] = celula

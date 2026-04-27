@@ -58,7 +58,8 @@ class ExtractionPanel(QGroupBox):
 
     def _add_chip(self):
         text = self.input_chip.text().strip()
-        parts = [p.strip() for p in text.split(',') if p.strip()]
+        # Removido o strip() interno de cada parte para preservar espaços nos nomes das colunas
+        parts = [p for p in text.split(',') if p]
         for p in parts:
             if p not in self.chips:
                 self.chips.append(p)
