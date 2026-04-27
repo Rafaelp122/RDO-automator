@@ -1,0 +1,29 @@
+[projeto]
+nome = "Novo Relatório"
+mes = 4
+ano = 2026
+
+[arquivos]
+linha_cabecalho = 0
+dados_origem = ""
+user_template = ""
+template_ativo = ""
+
+[contrato]
+data_inicio = "2026-01-01"
+prazo_dias = 365
+
+["extração"]
+colunas = []
+separador_lista = ", "
+conector_final = " e "
+formato_final = ""
+
+[posicoes]
+celula_data_inicio = ""
+celula_prazo_dias = ""
+celula_data_final = ""
+celula_data_atual = ""
+celula_tempo_decorrido = ""
+
+[mapeamento]
