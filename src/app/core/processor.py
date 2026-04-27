@@ -60,35 +60,68 @@ class TextProcessor:
     def formatar_resumo(cls, dados_extraidos, formato_final, separador_lista=", ", conector_final=" e "):
         """
         Gera a frase final baseada no template, aplicando regras de pluralização.
-        dados_extraidos: dict onde as chaves são as colunas (ex: 'Serviço') e os valores são listas de strings.
         """
         if not formato_final or not dados_extraidos:
             return ""
 
-        texto_resultado = formato_final
+        # Verificação preventiva: Se não houver nenhum serviço real, não gera nada
+        # Consideramos 'Serviço' ou 'Descrição do serviço' como âncoras
+        tem_servico_valido = False
         
+        processados = {}
         for coluna, lista_valores in dados_extraidos.items():
-            # Limpa e remove duplicatas
-            valores_limpos = sorted(list(set(cls.corrigir_capitalizacao(str(v)) for v in lista_valores if v)))
+            # Filtro robusto: Ignora valores que são apenas números pequenos (ruído de planilha)
+            # ou strings vazias/NAs
+            valores_limpos = []
+            for v in lista_valores:
+                v_str = str(v).strip()
+                # Ignora se for vazio, "nan", "0" ou apenas números decimais soltos
+                if not v_str or v_str.lower() == 'nan' or v_str == '0':
+                    continue
+                # Ignora ruídos numéricos típicos de erro de leitura (ex: 0.3, 1.2)
+                if re.match(r'^-?\d+(\.\d+)?$', v_str) and float(v_str) < 2:
+                    continue
+                
+                valores_limpos.append(cls.corrigir_capitalizacao(v_str))
             
-            # Monta a string da lista
-            if not valores_limpos:
-                string_valores = ""
-                is_plural = False
-            else:
+            # Remove duplicatas mantendo ordem
+            valores_limpos = sorted(list(set(valores_limpos)))
+            
+            if valores_limpos:
+                if "serviço" in coluna.lower():
+                    tem_servico_valido = True
+                
+                is_plural = len(valores_limpos) > 1
                 string_valores = separador_lista.join(valores_limpos[:-1])
                 if string_valores:
                     string_valores += f"{conector_final}{valores_limpos[-1]}"
                 else:
                     string_valores = valores_limpos[0]
-                is_plural = len(valores_limpos) > 1
+                
+                processados[coluna] = {
+                    "texto": string_valores,
+                    "plural": is_plural
+                }
+            else:
+                processados[coluna] = {
+                    "texto": "",
+                    "plural": False
+                }
 
-            # Substituição dos valores brutos
-            texto_resultado = texto_resultado.replace(f"{{{coluna}}}", string_valores)
+        # Se não encontramos nenhum serviço válido, retornamos vazio para não sujar a planilha
+        if not tem_servico_valido:
+            return ""
+
+        texto_resultado = formato_final
+        for coluna, info in processados.items():
+            texto_resultado = texto_resultado.replace(f"{{{coluna}}}", info["texto"])
+            texto_resultado = texto_resultado.replace(f"{{{coluna}:s}}", "s" if info["plural"] else "")
+            texto_resultado = texto_resultado.replace(f"{{{coluna}:es}}", "es" if info["plural"] else "")
             
-            # Tratamento de plurais (ex: {Chave:s}, {Chave:es}, {Chave:nos})
-            texto_resultado = texto_resultado.replace(f"{{{coluna}:s}}", "s" if is_plural else "")
-            texto_resultado = texto_resultado.replace(f"{{{coluna}:es}}", "es" if is_plural else "")
-            texto_resultado = texto_resultado.replace(f"{{{coluna}:nos}}", "s" if is_plural else "")
+            # Lógica inteligente para 'no' vs 'nos' / 'na' vs 'nas'
+            # Se for plural, vira 'nos/nas'. O gênero é difícil detectar sem NLP pesado, 
+            # então mantemos a lógica de pluralização simples solicitada.
+            plural_connector = "s" if info["plural"] else ""
+            texto_resultado = texto_resultado.replace(f"{{{coluna}:nos}}", plural_connector)
             
         return texto_resultado
