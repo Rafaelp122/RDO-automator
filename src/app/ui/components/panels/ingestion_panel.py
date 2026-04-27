@@ -74,28 +74,28 @@ class IngestionPanel(QGroupBox):
     def _select_source(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Selecionar Planilha", "", "Excel (*.xlsx *.xls)")
         if file_path:
-            dest = INPUT_DIR / Path(file_path).name
             try:
-                shutil.copy2(file_path, dest)
-                logger.info(f"Arquivo importado: {dest}")
-                self.config.arquivos.dados_origem = str(dest)
+                # Calcula caminho relativo à raiz do projeto
+                rel_path = os.path.relpath(file_path, os.getcwd())
+                self.config.arquivos.dados_origem = rel_path
+                logger.info(f"Planilha selecionada: {rel_path}")
                 self._update_labels()
                 self.config_changed.emit()
             except Exception as e:
-                logger.error(f"Erro ao copiar: {e}")
+                logger.error(f"Erro ao processar caminho da planilha: {e}")
 
     def _select_template(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Selecionar Template", "", "Excel (*.xlsx *.xls)")
         if file_path:
-            dest = INPUT_DIR / Path(file_path).name
             try:
-                shutil.copy2(file_path, dest)
-                logger.info(f"Template importado: {dest}")
-                self.config.arquivos.user_template = str(dest)
+                # Calcula caminho relativo à raiz do projeto
+                rel_path = os.path.relpath(file_path, os.getcwd())
+                self.config.arquivos.user_template = rel_path
+                logger.info(f"Template selecionado: {rel_path}")
                 self._update_labels()
                 self.config_changed.emit()
             except Exception as e:
-                logger.error(f"Erro ao copiar template: {e}")
+                logger.error(f"Erro ao processar caminho do template: {e}")
 
     def _update_header(self, value):
         self.config.arquivos.linha_cabecalho = value
