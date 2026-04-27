@@ -18,3 +18,4 @@ data/input/*
 data/output/*
 !data/output/.gitkeep
 .coverage
+config.toml
