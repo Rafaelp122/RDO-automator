@@ -11,11 +11,17 @@ dependencies = [
     "pydantic>=2.13.3",
     "pyinstaller>=6.0.0",
     "tomli-w>=1.2.0",
+    "pillow>=10.0.0",
+]
+
+[tool.uv]
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'"
 ]
 
 [dependency-groups]
 dev = [
-    "pyqtinspect>=0.5.0",
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.15.1",
