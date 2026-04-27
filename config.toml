@@ -1,36 +1,31 @@
 [projeto]
-nome = "Novo Relatório"
-mes = 3
+nome = "Projeto Modelo"
+mes = 1
 ano = 2026
 
 [arquivos]
-linha_cabecalho = 4
-dados_origem = "/home/rafael/projetos/report_automator/data/input/PLANILHA_DE_MEDIÇÃO_GRUPO_2_CONTR_07-2024_-_MED_06-12_MES_03-26(1).xlsx"
-user_template = "/home/rafael/projetos/report_automator/data/input/diario_base.xlsx"
-template_ativo = "/home/rafael/projetos/report_automator/data/input/diario_base.xlsx"
+linha_cabecalho = 0
+dados_origem = ""
+user_template = ""
+template_ativo = ""
 
 [contrato]
-data_inicio = "2025-10-01"
+data_inicio = "2026-01-01"
 prazo_dias = 365
 
 ["extração"]
-colunas = [
-    "Bairro",
-    "Descrição do serviço",
-]
+colunas = ["Coluna1", "Coluna2"]
 separador_lista = ", "
 conector_final = " e "
-formato_final = "Serviço{Descrição do serviço:s} realizado{Descrição do serviço:s}: {Descrição do serviço}. No{Bairro:nos} Bairro{Bairro:s}: {Bairro}.\n"
+formato_final = "{Coluna1}: {Coluna2}"
 
 [posicoes]
-celula_data_inicio = "R8"
-celula_prazo_dias = "L8"
+celula_data_inicio = ""
+celula_prazo_dias = ""
 celula_data_final = ""
-celula_data_atual = "P4"
-celula_tempo_decorrido = "P7"
+celula_data_atual = ""
+celula_tempo_decorrido = ""
 
 [mapeamento]
-"MC Manut. Horizontal Manual" = "A29"
-"MC Manut. Horizontal Mecânica" = "A31"
-"MC Manut. Vertical " = "A33"
-"MC SEMAFÓRICA" = "A35"
+# Exemplo: "Nome da Aba" = "Célula"
+# "Geral" = "B15"
