@@ -19,8 +19,10 @@ class MainController(QObject):
         self.config_manager = config_manager
         self.config = self.config_manager.config
         
-        # Gerenciamento de threads ativas
+        # Gerenciamento de threads
         self._active_threads = []
+        self._val_thread = None
+        self._val_worker = None
 
         # Timer para debounce de salvamento (500ms)
         self._save_timer = QTimer()
@@ -58,26 +60,42 @@ class MainController(QObject):
             self.view.update_status(f"❌ Erro ao salvar config: {e}", is_error=True)
 
     def _validate_initial(self):
-        """Executa a validação de mapeamento em uma thread separada"""
+        """Executa a validação de mapeamento, garantindo que apenas uma ocorra por vez"""
+        # Se já houver uma validação rodando, desconecta os sinais para evitar poluição visual
+        # mas deixa a thread terminar para evitar crashes (terminate é inseguro)
+        if self._val_worker:
+            try:
+                self._val_worker.progress_log.disconnect()
+                self._val_worker.validation_finished.disconnect()
+            except (TypeError, RuntimeError):
+                pass
+
         self.view.clear_field_errors()
-        self.view.log_message("Iniciando validação...")
         
-        thread = QThread()
-        worker = ValidationWorker(self.config, ReportValidator())
-        worker.moveToThread(thread)
+        self._val_thread = QThread()
+        self._val_worker = ValidationWorker(self.config, ReportValidator())
+        self._val_worker.moveToThread(self._val_thread)
         
-        thread.started.connect(worker.run)
-        worker.progress_log.connect(self.view.log_message)
-        worker.validation_finished.connect(self._on_validation_finished)
+        # Manter referência ao worker atrelada à thread
+        self._val_thread.worker = self._val_worker
+        
+        self._val_thread.started.connect(self._val_worker.run)
+        self._val_worker.progress_log.connect(self.view.log_message)
+        self._val_worker.validation_finished.connect(self._on_validation_finished)
         
         # Cleanup robusto
-        worker.finished.connect(thread.quit)
-        worker.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(lambda: self._active_threads.remove(thread) if thread in self._active_threads else None)
+        self._val_worker.finished.connect(self._val_thread.quit)
+        self._val_worker.finished.connect(self._val_worker.deleteLater)
+        self._val_thread.finished.connect(self._val_thread.deleteLater)
+        self._val_thread.finished.connect(lambda: self._on_thread_finished(self._val_thread))
         
-        self._active_threads.append(thread)
-        thread.start()
+        self._active_threads.append(self._val_thread)
+        self._val_thread.start()
+
+    def _on_thread_finished(self, thread):
+        """Remove a thread da lista de ativos após a conclusão"""
+        if thread in self._active_threads:
+            self._active_threads.remove(thread)
 
     @Slot(bool, list, dict)
     def _on_validation_finished(self, success, errors, field_errors):
@@ -96,6 +114,9 @@ class MainController(QObject):
         worker = ProcessorWorker(self.config, ReportService())
         worker.moveToThread(thread)
         
+        # Manter referência ao worker
+        thread.worker = worker
+        
         thread.started.connect(worker.run)
         worker.progress_log.connect(self.view.log_message)
         worker.progress_update.connect(self.view.update_progress)
@@ -108,7 +129,7 @@ class MainController(QObject):
         worker.error.connect(thread.quit)
         worker.error.connect(worker.deleteLater)
         thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(lambda: self._active_threads.remove(thread) if thread in self._active_threads else None)
+        thread.finished.connect(lambda: self._on_thread_finished(thread))
         
         self._active_threads.append(thread)
         thread.start()

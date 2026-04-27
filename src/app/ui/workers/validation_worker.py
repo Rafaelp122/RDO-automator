@@ -29,9 +29,7 @@ class ValidationWorker(QObject):
                 self.progress_log.emit(f"ERRO: {msg_log}")
 
             if sucesso:
-                msg = "Tudo ok! Mapeamento validado."
-                logger.info(msg)
-                self.progress_log.emit(msg)
+                logger.info("Tudo ok! Mapeamento validado.")
                 self.validation_finished.emit(True, [], {})
             else:
                 logger.warning(f"Validação concluída com {len(erros_log)} erros.")

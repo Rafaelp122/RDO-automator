@@ -48,10 +48,10 @@ class MainWindow(QMainWindow):
         # Header
         self.header = Header("RDO Automator v1.0")
         self.main_layout.addWidget(self.header)
-    ...
-        # Footer
-        self.footer = Footer(version="v1.0.0", license_info="Licença MIT")
-        self.main_layout.addWidget(self.footer)
+
+        # Scroll Area for the panels
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QScrollArea.Shape.NoFrame)
         self.scroll_content = QWidget()
         self.scroll_content.setObjectName("ScrollContent")
@@ -100,6 +100,7 @@ class MainWindow(QMainWindow):
                 if path.exists():
                     with open(path, "r") as f:
                         qss = f.read()
+                        # Resolve caminhos de ativos dinamicamente
                         assets_path = str(ASSETS_DIR.absolute()).replace("\\", "/")
                         qss = qss.replace("{{ASSETS_DIR}}", assets_path)
                         styles.append(qss)
