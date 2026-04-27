@@ -33,9 +33,9 @@ def build():
     # if platform.system() == "Windows":
     #     args.append('--icon=assets/icon.ico')
 
-    print(f"🚀 Iniciando build do {app_name} para {platform.system()}...")
+    print(f"Iniciando build do {app_name} para {platform.system()}...")
     PyInstaller.__main__.run(args)
-    print("\n✅ Build concluído! Verifique a pasta 'dist/'.")
+    print("\nBuild concluido! Verifique a pasta 'dist/'.")
 
 if __name__ == "__main__":
     build()
