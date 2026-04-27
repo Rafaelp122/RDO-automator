@@ -114,6 +114,20 @@ class MainWindow(QMainWindow):
         """Adiciona mensagem ao console de log"""
         self.control_panel.log(message)
 
+    def refresh_ui(self):
+        """Propaga o comando de atualização para todos os painéis"""
+        self.ingestion_panel.refresh_ui()
+        self.config_panel.refresh_ui()
+        self.extraction_panel.refresh_ui()
+
+    def set_config(self, new_config):
+        """Atualiza a referência de configuração em todos os componentes"""
+        self.config = new_config
+        self.ingestion_panel.set_config(new_config)
+        self.config_panel.set_config(new_config)
+        self.extraction_panel.set_config(new_config)
+        self.refresh_ui()
+
     def update_status(self, text: str, is_error: bool = False):
         """Atualiza o label de status"""
         self.control_panel.set_status(text, is_error)

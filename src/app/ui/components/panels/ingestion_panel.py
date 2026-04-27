@@ -15,6 +15,7 @@ class IngestionPanel(QGroupBox):
     def __init__(self, config):
         super().__init__("📥 Ingestão de Arquivos")
         self.config = config
+        self._is_updating = False
         self._init_ui()
 
     def _init_ui(self):
@@ -53,7 +54,18 @@ class IngestionPanel(QGroupBox):
         layout.addLayout(tmpl_layout)
         layout.addLayout(hdr_layout)
         self.setLayout(layout)
+        self.refresh_ui()
+
+    def refresh_ui(self):
+        """Atualiza a interface com os dados atuais da configuração"""
+        self._is_updating = True
+        self.spin_header.setValue(self.config.arquivos.linha_cabecalho)
         self._update_labels()
+        self._is_updating = False
+
+    def set_config(self, config):
+        """Atualiza a referência de configuração"""
+        self.config = config
 
     def _truncate(self, text, length=35):
         return (text[:length] + '...') if len(text) > length else text
@@ -98,8 +110,23 @@ class IngestionPanel(QGroupBox):
                 logger.error(f"Erro ao processar caminho do template: {e}")
 
     def _update_header(self, value):
+        if self._is_updating:
+            return
         self.config.arquivos.linha_cabecalho = value
         self.config_changed.emit()
+
+    def save_config(self, config=None):
+        """Sincroniza os dados da interface com o objeto config fornecido ou interno"""
+        if self._is_updating:
+            return
+            
+        target_config = config if config else self.config
+        target_config.arquivos.linha_cabecalho = self.spin_header.value()
+
+    def _save_config(self):
+        if self._is_updating:
+            return
+        self.save_config()
 
     def set_field_errors(self, field_errors: dict):
         """Aplica estilo de erro aos campos deste painel"""

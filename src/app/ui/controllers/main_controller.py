@@ -153,7 +153,11 @@ class MainController(QObject):
         if file_path:
             try:
                 self.config = self.config_manager.import_config(file_path)
-                self.view.show_success_dialog("Sucesso", "Configuração importada! Reinicie o app para aplicar todas as mudanças visuais.")
+                # Atualiza a referência de configuração e a interface imediatamente
+                self.view.set_config(self.config)
+                # Salva no config.toml padrão para persistir entre reinicializações
+                self.config_manager.save_config()
+                self.view.show_success_dialog("Sucesso", "Configuração importada e aplicada com sucesso!")
                 self._validate_initial()
             except Exception as e:
                 self.view.show_error_dialog("Erro", f"Falha ao importar: {str(e)}")
@@ -163,6 +167,11 @@ class MainController(QObject):
         file_path = self.view.get_save_file_path("Exportar Configuração", "config_exportada.toml", "Arquivos TOML (*.toml)")
         if file_path:
             try:
+                # Sincroniza dados da interface usando o objeto config do controller
+                self.view.ingestion_panel.save_config(self.config)
+                self.view.config_panel.save_config(self.config)
+                self.view.extraction_panel.save_config(self.config)
+                
                 self.config_manager.export_config(file_path, config_to_export=self.config)
                 self.view.show_success_dialog("Sucesso", "Configuração exportada com sucesso!")
             except Exception as e:

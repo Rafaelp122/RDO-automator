@@ -68,13 +68,30 @@ class ConfigManager:
             raise
 
     def export_config(self, file_path, config_to_export: ReportConfig = None):
-        """Exporta a configuração atual para um arquivo externo"""
+        """Exporta a configuração atual para um arquivo externo, convertendo caminhos para relativo"""
+        import os
         config = config_to_export if config_to_export else self.config
         try:
+            # model_dump() simples para garantir que mapeamento e posições sejam incluídos
             data = config.model_dump(by_alias=True)
+            
+            # LOG DE DEPURAÇÃO (Verifique no terminal se os dados aparecem aqui)
+            logger.debug(f"Exportando dados: Posições={data.get('posicoes')}, Mapeamento={data.get('mapeamento')}")
+            
+            # Converter caminhos para relativo se possível
+            root = os.getcwd()
+            if data.get("arquivos"):
+                for key in ["dados_origem", "user_template", "template_ativo"]:
+                    path_val = data["arquivos"].get(key)
+                    if path_val and os.path.isabs(path_val):
+                        try:
+                            data["arquivos"][key] = os.path.relpath(path_val, root)
+                        except (ValueError, TypeError):
+                            pass 
+
             with open(file_path, "wb") as f:
                 tomli_w.dump(data, f)
-            logger.info(f"Configuração exportada para: {file_path}")
+            logger.info(f"Configuração exportada com sucesso para: {file_path}")
         except Exception as e:
             logger.error(f"Erro ao exportar configuração para {file_path}: {e}")
             raise

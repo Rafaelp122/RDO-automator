@@ -15,37 +15,46 @@ class ContractPeriodGroup(QGroupBox):
         # Data Inicial
         self.date_inicio = QDateEdit()
         self.date_inicio.setCalendarPopup(True)
-        iso_data = self.config.contrato.data_inicio
-        if iso_data:
-            self.date_inicio.setDate(QDate.fromString(iso_data, "yyyy-MM-dd"))
-        else:
-            self.date_inicio.setDate(QDate.currentDate())
         self.date_inicio.dateChanged.connect(lambda *a: self.changed.emit())
         layout.addRow("Data Inicial:", self.date_inicio)
         
         # Prazo (Dias)
         self.spin_prazo = QSpinBox()
         self.spin_prazo.setMaximum(9999)
-        self.spin_prazo.setValue(self.config.contrato.prazo_dias)
         self.spin_prazo.valueChanged.connect(lambda *a: self.changed.emit())
         layout.addRow("Prazo (Dias):", self.spin_prazo)
         
         # Mês Atual
         self.spin_mes = QSpinBox()
         self.spin_mes.setRange(1, 12)
-        self.spin_mes.setValue(self.config.projeto.mes)
         self.spin_mes.valueChanged.connect(lambda *a: self.changed.emit())
         layout.addRow("Mês Atual:", self.spin_mes)
         
         # Ano Atual
         self.spin_ano = QSpinBox()
         self.spin_ano.setRange(2000, 2100)
-        self.spin_ano.setValue(self.config.projeto.ano)
         self.spin_ano.valueChanged.connect(lambda *a: self.changed.emit())
         layout.addRow("Ano Atual:", self.spin_ano)
         
         self.setLayout(layout)
+        self.refresh_ui()
         
+    def refresh_ui(self):
+        """Atualiza a interface com os dados atuais da configuração"""
+        iso_data = self.config.contrato.data_inicio
+        if iso_data:
+            self.date_inicio.setDate(QDate.fromString(iso_data, "yyyy-MM-dd"))
+        else:
+            self.date_inicio.setDate(QDate.currentDate())
+        
+        self.spin_prazo.setValue(self.config.contrato.prazo_dias)
+        self.spin_mes.setValue(self.config.projeto.mes)
+        self.spin_ano.setValue(self.config.projeto.ano)
+
+    def set_config(self, config):
+        """Atualiza a referência de configuração"""
+        self.config = config
+
     def update_config(self, config):
         config.contrato.data_inicio = self.date_inicio.date().toString("yyyy-MM-dd")
         config.contrato.prazo_dias = self.spin_prazo.value()

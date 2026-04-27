@@ -11,6 +11,7 @@ class ConfigPanel(QGroupBox):
     def __init__(self, config):
         super().__init__("⚙️ Configuração Estrutural")
         self.config = config
+        self._is_updating = False
         self._init_ui()
 
     def _init_ui(self):
@@ -38,6 +39,21 @@ class ConfigPanel(QGroupBox):
 
         self.setLayout(main_layout)
 
+    def refresh_ui(self):
+        """Atualiza a interface de todos os grupos internos"""
+        self._is_updating = True
+        self.contract_group.refresh_ui()
+        self.coords_group.refresh_ui()
+        self.mapping_group.set_mapping(self.config.mapeamento)
+        self._is_updating = False
+
+    def set_config(self, config):
+        """Atualiza a referência de configuração em todos os grupos"""
+        self.config = config
+        self.contract_group.set_config(config)
+        self.coords_group.set_config(config)
+        # MappingGroup não armazena config, apenas o dicionário de mapeamento
+
     def _create_separator(self):
         from PySide6.QtWidgets import QWidget, QVBoxLayout, QFrame
 
@@ -53,12 +69,20 @@ class ConfigPanel(QGroupBox):
 
         return container
 
-    def _save_config(self, *args):
-        self.contract_group.update_config(self.config)
-        self.coords_group.update_config(self.config)
-        self.mapping_group.update_config(self.config)
+    def save_config(self, config=None):
+        """Sincroniza os dados de todos os grupos com o objeto config fornecido ou interno"""
+        if self._is_updating:
+            return
+            
+        target_config = config if config else self.config
+        self.contract_group.update_config(target_config)
+        self.coords_group.update_config(target_config)
+        self.mapping_group.update_config(target_config)
 
         self.config_changed.emit()
+
+    def _save_config(self, *args):
+        self.save_config()
 
     def set_field_errors(self, field_errors: dict):
         """Propaga erros para os grupos de configuração"""

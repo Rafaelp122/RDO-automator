@@ -10,6 +10,7 @@ class ExtractionPanel(QGroupBox):
     def __init__(self, config):
         super().__init__("📝 Extração Dinâmica")
         self.config = config
+        self._is_updating = False
         self.chips = []
         self._init_ui()
 
@@ -55,8 +56,35 @@ class ExtractionPanel(QGroupBox):
         
         layout.addLayout(sep_layout)
         self.setLayout(layout)
+        self.refresh_ui()
+
+    def refresh_ui(self):
+        """Atualiza a interface com os dados atuais da configuração"""
+        self._is_updating = True
+        # Limpar chips atuais
+        self.chips = []
+        while self.chips_layout.count():
+            item = self.chips_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # Recriar chips
+        for col in self.config.extracao.colunas:
+            self._create_chip_widget(col)
+            
+        # Atualizar textos
+        self.text_formato.setPlainText(self.config.extracao.formato_final)
+        self.input_sep.setText(self.config.extracao.separador_lista)
+        self.input_con.setText(self.config.extracao.conector_final)
+        self._is_updating = False
+
+    def set_config(self, config):
+        """Atualiza a referência de configuração"""
+        self.config = config
 
     def _add_chip(self):
+        if self._is_updating:
+            return
         text = self.input_chip.text().strip()
         # Removido o strip() interno de cada parte para preservar espaços nos nomes das colunas
         parts = [p for p in text.split(',') if p]
@@ -95,12 +123,19 @@ class ExtractionPanel(QGroupBox):
         btn.clicked.connect(remove_chip)
         self.chips_layout.addWidget(chip_widget)
 
-    def _save_config(self):
-        extracao = self.config.extracao
+    def save_config(self, config=None):
+        """Sincroniza os dados da interface com o objeto config fornecido ou interno"""
+        target_config = config if config else self.config
+        extracao = target_config.extracao
         extracao.colunas = self.chips
         extracao.formato_final = self.text_formato.toPlainText()
         extracao.separador_lista = self.input_sep.text()
         extracao.conector_final = self.input_con.text()
+
+    def _save_config(self):
+        if self._is_updating:
+            return
+        self.save_config()
         self.config_changed.emit()
 
     def set_field_errors(self, field_errors: dict):
