@@ -5,8 +5,8 @@ QGroupBox {
     background-color: #FFFFFF;
     border: 1px solid #E0E6ED;
     border-radius: 12px;
-    margin-top: 20px;
-    padding-top: 0px;
+    margin-top: 25px;
+    padding-top: 15px;
     font-size: 14px;
     font-weight: bold;
     color: #1E293B;
@@ -15,6 +15,7 @@ QGroupBox {
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
+    left: 10px;
     padding: 0 5px;
     color: #3F51B5;
 }
@@ -22,7 +23,8 @@ QGroupBox::title {
 QGroupBox#BorderlessGroup {
     border: none;
     background-color: transparent;
-    margin-top: 15px;
+    margin-top: 25px;
+    padding-top: 5px;
 }
 
 /* --- Header --- */

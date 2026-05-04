@@ -1,6 +1,6 @@
 import os
 import io
-from copy import copy
+from copy import copy, deepcopy
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as OpenpyxlImage
 from pathlib import Path
@@ -59,7 +59,7 @@ class TemplateManager:
             try:
                 # Criamos um novo objeto de imagem limpo para cada aba
                 new_img = OpenpyxlImage(io.BytesIO(img_info["bytes"]))
-                new_img.anchor = img_info["anchor"]
+                new_img.anchor = deepcopy(img_info["anchor"])
                 new_ws.add_image(new_img)
             except Exception as e:
                 logger.warning(f"Não foi possível injetar imagem na aba {title}: {e}")
