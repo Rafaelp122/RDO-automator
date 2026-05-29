@@ -26,6 +26,8 @@ export default function App() {
   const [contractPrazo, setContractPrazo] = useState<number>(30);
   const [contractMes, setContractMes] = useState<number>(1);
   const [contractAno, setContractAno] = useState<number>(2026);
+  const [listSeparator, setListSeparator] = useState<string>(", ");
+  const [listConnector, setListConnector] = useState<string>(" e ");
 
   const sourceFileRef = useRef<File | null>(null);
   const templateFileRef = useRef<File | null>(null);
@@ -49,8 +51,8 @@ export default function App() {
           templateCell: m.templateCell,
           sourceColumns: m.sourceColumns,
         })),
-        listSeparator: ", ",
-        listConnector: " e ",
+        listSeparator,
+        listConnector,
       };
 
       const blob = await generateReport(sourceFileRef.current, templateFileRef.current, config);
@@ -203,6 +205,10 @@ export default function App() {
                 mappings={appState.mappings}
                 availableColumns={availableColumns}
                 onMappingsChange={(mappings) => setAppState(prev => ({ ...prev, mappings }))}
+                listSeparator={listSeparator}
+                onListSeparatorChange={setListSeparator}
+                listConnector={listConnector}
+                onListConnectorChange={setListConnector}
               />
             </div>
           </AccordionSection>

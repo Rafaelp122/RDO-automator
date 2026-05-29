@@ -7,9 +7,13 @@ interface MappingSectionProps {
   mappings: MappingData[];
   onMappingsChange: (mappings: MappingData[]) => void;
   availableColumns: string[];
+  listSeparator: string;
+  onListSeparatorChange: (val: string) => void;
+  listConnector: string;
+  onListConnectorChange: (val: string) => void;
 }
 
-export function MappingSection({ mappings, onMappingsChange, availableColumns }: MappingSectionProps) {
+export function MappingSection({ mappings, onMappingsChange, availableColumns, listSeparator, onListSeparatorChange, listConnector, onListConnectorChange }: MappingSectionProps) {
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [formatTemplate, setFormatTemplate] = useState<string>('');
 
@@ -135,6 +139,29 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns }:
             <div className="mt-2 text-[11px] bg-white border border-dashed border-slate-300 p-2 rounded">
               <span className="text-[10px] font-bold text-slate-400 block mb-1">PREVIEW:</span>
               {generatePreview()}
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-medium text-slate-500 block mb-1">Separador de lista</label>
+                <input
+                  type="text"
+                  className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-[var(--color-primary)] outline-none"
+                  value={listSeparator}
+                  onChange={(e) => onListSeparatorChange(e.target.value)}
+                  placeholder=", "
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-medium text-slate-500 block mb-1">Conector final</label>
+                <input
+                  type="text"
+                  className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-[var(--color-primary)] outline-none"
+                  value={listConnector}
+                  onChange={(e) => onListConnectorChange(e.target.value)}
+                  placeholder=" e "
+                />
+              </div>
             </div>
           </div>
           
