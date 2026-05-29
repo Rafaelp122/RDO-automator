@@ -6,7 +6,7 @@ export function Header() {
       </div>
       <h1 className="text-[22px] font-bold text-white">RDO Automator</h1>
       <div className="ml-auto flex items-center gap-4">
-        <div className="text-white opacity-80 text-xs font-semibold uppercase tracking-wider hidden sm:block">Versão Desktop v2.4</div>
+        <div className="text-white opacity-80 text-xs font-semibold uppercase tracking-wider hidden sm:block">Versão v2.0</div>
         <div className="w-8 h-8 rounded-full bg-indigo-900/30 flex items-center justify-center text-white text-xs">JS</div>
       </div>
     </header>
