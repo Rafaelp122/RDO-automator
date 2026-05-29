@@ -1,4 +1,5 @@
 import io
+import json
 import pandas as pd
 from openpyxl import Workbook
 from fastapi.testclient import TestClient
@@ -39,3 +40,28 @@ def test_preview_template_endpoint():
 def test_preview_source_rejects_csv():
     response = client.post("/api/preview/source", files={"file": ("data.csv", b"a,b\n1,2", "text/csv")})
     assert response.status_code == 400
+
+
+def test_generate_endpoint():
+    source_data = _create_source_xlsx()
+    template_data = _create_template_xlsx()
+
+    config = {
+        "contract": {"start_date": "2026-01-01", "prazo_dias": 30, "mes": 1, "ano": 2026},
+        "mappings": [{"formatTemplate": "{Atividade}", "templateCell": "B3", "sourceColumns": ["Atividade"]}],
+        "listSeparator": ", ",
+        "listConnector": " e ",
+    }
+
+    response = client.post(
+        "/api/generate",
+        files={
+            "source": ("medicao.xlsx", source_data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            "template": ("template.xlsx", template_data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        },
+        data={"config": json.dumps(config)},
+    )
+
+    assert response.status_code == 200
+    assert "spreadsheetml" in response.headers["content-type"]
+    assert len(response.content) > 0
