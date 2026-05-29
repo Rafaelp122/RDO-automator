@@ -2,9 +2,9 @@ from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from exceptions import AppError
-from schemas import SourcePreviewResponse, TemplatePreviewResponse
-from excel import preview_source, preview_template, generate_report
+from backend.exceptions import AppError
+from backend.schemas import SourcePreviewResponse, TemplatePreviewResponse
+from backend.excel import preview_source, preview_template, generate_report
 
 app = FastAPI(title="RDO Automator API", version="2.0.0")
 
