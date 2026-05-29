@@ -1,0 +1,6 @@
+{
+  "name": "RDO Automator",
+  "description": "Protótipo de interface para automação de Relatórios de Diário de Obra (RDO)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
