@@ -30,13 +30,43 @@ export default function App() {
   const sourceFileRef = useRef<File | null>(null);
   const templateFileRef = useRef<File | null>(null);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!sourceFileRef.current || !templateFileRef.current) {
+      alert("Arquivos nao carregados. Recarregue a pagina.");
+      return;
+    }
     setIsGenerating(true);
-    // Simulate generation delay
-    setTimeout(() => {
+    try {
+      const config: GenerateConfig = {
+        contract: {
+          start_date: contractStart,
+          prazo_dias: contractPrazo,
+          mes: contractMes,
+          ano: contractAno,
+        },
+        mappings: appState.mappings.map(m => ({
+          formatTemplate: m.formatTemplate,
+          templateCell: m.templateCell,
+          sourceColumns: m.sourceColumns,
+        })),
+        listSeparator: ", ",
+        listConnector: " e ",
+      };
+
+      const blob = await generateReport(sourceFileRef.current, templateFileRef.current, config);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Diario_Consolidado_${String(contractMes).padStart(2, "0")}_${contractAno}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
       setIsGenerating(false);
-      alert('Relatório gerado com sucesso! O download começará em instantes.');
-    }, 2000);
+    }
   };
 
   const isMappingUnlocked = appState.dataUploadDone && appState.templateUploadDone;
