@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Header } from './components/Header';
 import { AccordionSection } from './components/AccordionSection';
 import { ContractFields } from './components/ContractFields';
@@ -6,40 +6,9 @@ import { FileUpload } from './components/FileUpload';
 import { DataPreview } from './components/DataPreview';
 import { TemplatePreview } from './components/TemplatePreview';
 import { MappingSection } from './components/MappingSection';
-import { AppState, Sheet } from './types';
+import { AppState, Sheet, GenerateConfig } from './types';
 import { motion } from 'motion/react';
-
-const MOCK_SHEETS: Sheet[] = [
-  {
-    name: "Relatorio_Geral",
-    selected: true,
-    columns: ["Data", "Equipe", "Atividade", "Quantidade", "Unidade", "Horas", "Observação"],
-    selectedColumns: ["Data", "Equipe", "Atividade", "Quantidade"],
-    data: [
-      ["23/05/2026", "A", "Escavação", "150", "m³", "8", "Terreno rochoso"],
-      ["23/05/2026", "B", "Concretagem", "45", "m³", "8", "Pilar P1 a P4"],
-      ["24/05/2026", "A", "Armação", "1200", "kg", "8", "Laje L1"],
-    ]
-  },
-  {
-    name: "Drenagem",
-    selected: false,
-    columns: ["Data", "Frente", "Tubulação", "Metragem", "Status"],
-    selectedColumns: ["Data", "Frente", "Tubulação", "Status"],
-    data: [
-      ["24/05/2026", "Sul", "Tubo 600mm", "120", "Concluído"],
-    ]
-  },
-  {
-    name: "Elétrica",
-    selected: false,
-    columns: ["Data", "Poste", "Cabo", "Metragem", "Equipe"],
-    selectedColumns: ["Poste", "Cabo"],
-    data: [
-      ["25/05/2026", "P01", "Cabo 10mm", "50", "C"],
-    ]
-  }
-];
+import { previewSource, generateReport } from './services/api';
 
 export default function App() {
   const [activeSegment, setActiveSegment] = useState<number>(1);
@@ -47,7 +16,7 @@ export default function App() {
     dataUploadDone: false,
     templateUploadDone: false,
     mappings: [],
-    sheets: MOCK_SHEETS
+    sheets: []
   });
 
   const [dataSourceFile, setDataSourceFile] = useState<string | null>(null);
@@ -57,6 +26,9 @@ export default function App() {
   const [contractPrazo, setContractPrazo] = useState<number>(30);
   const [contractMes, setContractMes] = useState<number>(1);
   const [contractAno, setContractAno] = useState<number>(2026);
+
+  const sourceFileRef = useRef<File | null>(null);
+  const templateFileRef = useRef<File | null>(null);
 
   const handleGenerate = () => {
     setIsGenerating(true);
@@ -109,10 +81,29 @@ export default function App() {
             <FileUpload 
               label="Planilha de Origem" 
               selectedFileName={dataSourceFile}
-              onFileSelect={(name) => {
-                setDataSourceFile(name || null);
-                if (!name) {
-                  setAppState(prev => ({ ...prev, dataUploadDone: false }));
+              onFileSelect={async (name, file) => {
+                if (!name || !file) {
+                  setDataSourceFile(null);
+                  sourceFileRef.current = null;
+                  setAppState(prev => ({ ...prev, dataUploadDone: false, sheets: [] }));
+                  return;
+                }
+                setDataSourceFile(name);
+                sourceFileRef.current = file;
+                try {
+                  const result = await previewSource(file);
+                  const sheets = result.sheets.map(s => ({
+                    name: s.name,
+                    selected: true,
+                    columns: s.columns,
+                    selectedColumns: [...s.columns],
+                    data: s.data,
+                  }));
+                  setAppState(prev => ({ ...prev, sheets }));
+                } catch (err) {
+                  alert((err as Error).message);
+                  setDataSourceFile(null);
+                  sourceFileRef.current = null;
                 }
               }}
             />
@@ -142,8 +133,9 @@ export default function App() {
             <FileUpload 
               label="Planilha de Destino (Template)" 
               selectedFileName={templateFile}
-              onFileSelect={(name) => {
+              onFileSelect={(name, file) => {
                 setTemplateFile(name || null);
+                templateFileRef.current = file || null;
                 if (!name) {
                   setAppState(prev => ({ ...prev, templateUploadDone: false }));
                 }

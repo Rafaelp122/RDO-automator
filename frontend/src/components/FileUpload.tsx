@@ -3,7 +3,7 @@ import { Upload, FileSpreadsheet } from 'lucide-react';
 
 interface FileUploadProps {
   label: string;
-  onFileSelect: (fileName: string) => void;
+  onFileSelect: (fileName: string | null, file?: File | null) => void;
   selectedFileName?: string | null;
 }
 
@@ -42,7 +42,7 @@ export function FileUpload({ label, onFileSelect, selectedFileName }: FileUpload
   const handleFile = (file: File) => {
     // Basic validation for prototype
     if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
-      onFileSelect(file.name);
+      onFileSelect(file.name, file);
     } else {
       alert('Por favor, selecione um arquivo Excel (.xlsx, .xls) ou CSV.');
     }
@@ -64,7 +64,7 @@ export function FileUpload({ label, onFileSelect, selectedFileName }: FileUpload
         </div>
         <button 
           className="text-xs text-[var(--color-primary)] hover:underline font-medium"
-          onClick={() => onFileSelect('')}
+          onClick={() => onFileSelect(null, null)}
         >
           Trocar arquivo
         </button>
