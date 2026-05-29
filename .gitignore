@@ -19,3 +19,4 @@ data/output/*
 !data/output/.gitkeep
 .coverage
 config.toml
+.superpowers/

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "pyside6-reviewer": {
+      "source": "akiselev/qt-llm-template",
+      "sourceType": "github",
+      "computedHash": "f6b411a902ff72aa1223ff110c4615ebd6640c096e4fb4655154c165279644b6"
+    }
+  }
+}
