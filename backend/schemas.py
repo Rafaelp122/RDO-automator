@@ -5,7 +5,7 @@ from typing import Optional
 class SheetData(BaseModel):
     name: str
     columns: list[str]
-    data: list[list]
+    data: list[list[str]]
 
 
 class SourcePreviewResponse(BaseModel):
@@ -18,12 +18,12 @@ class CellData(BaseModel):
     row: int
     col: int
     value: Optional[str] = None
-    font: Optional[dict] = None
+    font: Optional[dict[str, Optional[int | bool]]] = None
 
 
 class ImageData(BaseModel):
     b64: str
-    position: dict
+    position: dict[str, int]
 
 
 class TemplateSheet(BaseModel):

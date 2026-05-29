@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import { Sheet } from '../types';
 
 interface DataPreviewProps {
@@ -10,9 +10,15 @@ interface DataPreviewProps {
 export function DataPreview({ sheets, onSheetsChange, onComplete }: DataPreviewProps) {
   const [activeTabName, setActiveTabName] = useState<string>(sheets[0]?.name || '');
 
+  useEffect(() => {
+    if (!sheets.find(s => s.name === activeTabName)) {
+      setActiveTabName(sheets[0]?.name || '');
+    }
+  }, [sheets, activeTabName]);
+
   const activeSheet = sheets.find(s => s.name === activeTabName) || sheets[0];
 
-  const handleSheetToggle = (sheetName: string, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSheetToggle = (sheetName: string, event: ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     onSheetsChange(sheets.map(s => s.name === sheetName ? { ...s, selected: isChecked } : s));
   };
@@ -49,7 +55,6 @@ export function DataPreview({ sheets, onSheetsChange, onComplete }: DataPreviewP
         </div>
       </div>
       
-      {/* Tabs */}
       <div className="flex border-b border-[var(--color-card-border)] mb-4 overflow-x-auto">
         {sheets.map(sheet => (
           <div 
@@ -108,7 +113,8 @@ export function DataPreview({ sheets, onSheetsChange, onComplete }: DataPreviewP
               {activeSheet.data.map((row, rowIdx) => (
                 <tr key={rowIdx} className={activeSheet.selected ? 'hover:bg-slate-50' : 'bg-slate-50/50'}>
                   {row.map((cell, cellIdx) => {
-                    const isColSelected = activeSheet.selectedColumns.includes(activeSheet.columns[cellIdx]);
+                    const header = activeSheet.columns[cellIdx];
+                    const isColSelected = header ? activeSheet.selectedColumns.includes(header) : false;
                     return (
                       <td 
                         key={cellIdx} 

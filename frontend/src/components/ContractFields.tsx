@@ -29,7 +29,7 @@ export function ContractFields({ startDate, prazo, mes, ano, onChange }: Contrac
             className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-[var(--color-primary)] outline-none"
             value={prazo}
             min={1}
-            onChange={(e) => onChange("prazo", parseInt(e.target.value) || 0)}
+            onChange={(e) => onChange("prazo", Math.max(1, parseInt(e.target.value) || 1))}
           />
         </div>
         <div>

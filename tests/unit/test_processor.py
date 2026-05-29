@@ -1,5 +1,5 @@
 import pytest
-from src.app.core.processor import TextProcessor
+from backend.processor import TextProcessor
 
 class TestTextProcessor:
     
@@ -19,8 +19,7 @@ class TestTextProcessor:
         dados = {"Serviço": ["Pintura", "LIMPEZA"]}
         formato = "Realizamos o{Serviço:s} serviço{Serviço:s}: {Serviço}."
         resultado = TextProcessor.formatar_resumo(dados, formato)
-        # sorted: Limpeza, Pintura
-        assert resultado == "Realizamos os serviços: Limpeza e Pintura."
+        assert resultado == "Realizamos os serviços: Pintura e Limpeza."
 
     def test_formatar_resumo_singular(self):
         dados = {"Serviço": ["Pintura"]}

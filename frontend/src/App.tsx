@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Header } from './components/Header';
 import { AccordionSection } from './components/AccordionSection';
 import { ContractFields } from './components/ContractFields';
@@ -6,9 +6,9 @@ import { FileUpload } from './components/FileUpload';
 import { DataPreview } from './components/DataPreview';
 import { TemplatePreview } from './components/TemplatePreview';
 import { MappingSection } from './components/MappingSection';
-import { AppState, Sheet, GenerateConfig } from './types';
+import { AppState, Sheet, TemplateSheet, GenerateConfig } from './types';
 import { motion } from 'motion/react';
-import { previewSource, generateReport } from './services/api';
+import { previewSource, previewTemplate, generateReport } from './services/api';
 
 export default function App() {
   const [activeSegment, setActiveSegment] = useState<number>(1);
@@ -18,6 +18,7 @@ export default function App() {
     mappings: [],
     sheets: []
   });
+  const [templateSheets, setTemplateSheets] = useState<TemplateSheet[]>([]);
 
   const [dataSourceFile, setDataSourceFile] = useState<string | null>(null);
   const [templateFile, setTemplateFile] = useState<string | null>(null);
@@ -113,6 +114,7 @@ export default function App() {
             <FileUpload 
               label="Planilha de Origem" 
               selectedFileName={dataSourceFile}
+              accept=".xlsx,.xls"
               onFileSelect={async (name, file) => {
                 if (!name || !file) {
                   setDataSourceFile(null);
@@ -131,7 +133,7 @@ export default function App() {
                     selectedColumns: [...s.columns],
                     data: s.data,
                   }));
-                  setAppState(prev => ({ ...prev, sheets }));
+                  setAppState(prev => ({ ...prev, dataUploadDone: false, sheets, mappings: [] }));
                 } catch (err) {
                   alert((err as Error).message);
                   setDataSourceFile(null);
@@ -165,20 +167,32 @@ export default function App() {
             <FileUpload 
               label="Planilha de Destino (Template)" 
               selectedFileName={templateFile}
-              onFileSelect={(name, file) => {
+              accept=".xlsx"
+              onFileSelect={async (name, file) => {
                 setTemplateFile(name || null);
                 templateFileRef.current = file || null;
-                if (!name) {
-                  setAppState(prev => ({ ...prev, templateUploadDone: false }));
+                setAppState(prev => ({ ...prev, templateUploadDone: false }));
+                if (name && file) {
+                  try {
+                    const result = await previewTemplate(file);
+                    setTemplateSheets(result.sheets);
+                  } catch (err) {
+                    alert((err as Error).message);
+                    setTemplateFile(null);
+                    templateFileRef.current = null;
+                  }
+                } else {
+                  setTemplateSheets([]);
                 }
               }}
             />
             
             {templateFile && !appState.templateUploadDone && (
               <TemplatePreview 
+                sheets={templateSheets}
                 onComplete={() => {
                   setAppState(prev => ({ ...prev, templateUploadDone: true }));
-                  setActiveSegment(3); // Auto advance to step 3
+                  setActiveSegment(3);
                 }} 
               />
             )}
@@ -188,8 +202,8 @@ export default function App() {
         {/* Section 3: Mapeamento */}
         <motion.div 
           initial={false}
-          animate={{ y: isMappingUnlocked ? 0 : 0 }}
-          transition={{ duration: 0.5 }}
+          animate={{ opacity: isMappingUnlocked ? 1 : 0.5 }}
+          transition={{ duration: 0.3 }}
         >
           <AccordionSection 
             title="3. Mapeamento de Células" 
@@ -209,6 +223,7 @@ export default function App() {
                 onListSeparatorChange={setListSeparator}
                 listConnector={listConnector}
                 onListConnectorChange={setListConnector}
+                templateSheets={templateSheets}
               />
             </div>
           </AccordionSection>
@@ -245,7 +260,7 @@ export default function App() {
               GERANDO...
             </span>
           ) : (
-            'GERAR RELATÓRIO PDF/XLSX'
+            'GERAR RELATÓRIO XLSX'
           )}
         </button>
       </footer>

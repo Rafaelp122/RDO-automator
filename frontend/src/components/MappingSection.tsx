@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useRef } from 'react';
 import { X, Check, AlertCircle, FileText } from 'lucide-react';
 import { TemplatePreview } from './TemplatePreview';
 import { MappingData } from '../types';
@@ -11,13 +11,18 @@ interface MappingSectionProps {
   onListSeparatorChange: (val: string) => void;
   listConnector: string;
   onListConnectorChange: (val: string) => void;
+  templateSheets?: import('../types').TemplateSheet[];
 }
 
-export function MappingSection({ mappings, onMappingsChange, availableColumns, listSeparator, onListSeparatorChange, listConnector, onListConnectorChange }: MappingSectionProps) {
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+export function MappingSection({ mappings, onMappingsChange, availableColumns, listSeparator, onListSeparatorChange, listConnector, onListConnectorChange, templateSheets }: MappingSectionProps) {
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [formatTemplate, setFormatTemplate] = useState<string>('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Derived state to quickly check mapped cells and pass to TemplatePreview
   const mappedCellsMap = mappings.reduce((acc, curr) => {
     acc[curr.templateCell] = curr;
     return acc;
@@ -28,14 +33,13 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns, l
   };
 
   const handleColumnChipClick = (col: string) => {
-    const textarea = document.getElementById('format-template-textarea') as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (textarea) {
       const start = textarea.selectionStart;
       const text = formatTemplate;
       const newText = text.substring(0, start) + `{${col}}` + text.substring(start);
       setFormatTemplate(newText);
       
-      // Attempt to restore focus and cursor position after React re-renders
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(start + col.length + 2, start + col.length + 2);
@@ -50,18 +54,17 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns, l
     if (!matches) return [];
     
     const cols = matches.map(m => m.slice(1, -1));
-    return [...new Set(cols)]; // return unique
+    return [...new Set(cols)];
   };
 
   const addMapping = () => {
     if (!selectedCell || !formatTemplate.trim()) return;
     
-    // Check if cell is already mapped, if so replace it
     const existingIndex = mappings.findIndex(m => m.templateCell === selectedCell);
     const sourceColumns = extractUsedColumns(formatTemplate);
     
     const newMapping: MappingData = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substring(2, 11),
       templateCell: selectedCell,
       formatTemplate: formatTemplate.trim(),
       sourceColumns
@@ -75,7 +78,6 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns, l
       onMappingsChange([...mappings, newMapping]);
     }
     
-    // Reset selection after mapping
     setSelectedCell(null);
     setFormatTemplate('');
   };
@@ -84,24 +86,22 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns, l
     onMappingsChange(mappings.filter(m => m.id !== id));
   };
 
-  // Generate a dynamic preview
   const generatePreview = () => {
     if (!formatTemplate) return <span className="text-slate-400 italic">Preview do texto resultante...</span>;
     
-    const previewText = formatTemplate.replace(/\{([^}]+)\}/g, (match, col) => {
-      // Check if it's a valid column, if so, show a mock value, otherwise keep the placeholder
+    const escaped = escapeHtml(formatTemplate);
+    const previewHtml = escaped.replace(/\{([^}]+)\}/g, (match, col) => {
       if (availableColumns.includes(col)) {
         return `<mark class="bg-indigo-100 text-indigo-800 px-1 rounded not-italic">[Dado de ${col}]</mark>`;
       }
       return match;
     });
 
-    return <span dangerouslySetInnerHTML={{ __html: previewText }} />;
+    return <span dangerouslySetInnerHTML={{ __html: previewHtml }} />;
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* List of mappings and actions */}
       <div className="flex flex-col h-full">
         <h3 className="font-semibold text-[var(--color-text-primary)] mb-4">Adicionar Mapeamento</h3>
         
@@ -129,7 +129,7 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns, l
           <div className="mb-4">
             <label className="text-label block mb-2 text-slate-500">2. Formato do Texto</label>
             <textarea 
-              id="format-template-textarea"
+              ref={textareaRef}
               className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-xs focus:ring-1 focus:ring-[var(--color-primary)] outline-none min-h-[60px] resize-y font-mono"
               placeholder="Ex: Serviços Realizados: {Atividade}. No Bairro: {Bairro}"
               value={formatTemplate}
@@ -240,7 +240,6 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns, l
         )}
       </div>
 
-      {/* Interactive Template Preview */}
       <div className="flex flex-col">
         <h3 className="font-semibold text-[var(--color-text-primary)] mb-4 flex items-center justify-between">
           <span>Template Interativo</span>
@@ -249,10 +248,11 @@ export function MappingSection({ mappings, onMappingsChange, availableColumns, l
           </span>
         </h3>
         <TemplatePreview 
+          sheets={templateSheets}
           isInteractive={true} 
           onComplete={() => {}} 
           onCellSelect={handleCellSelect}
-          mappedCells={mappedCellsMap as any} 
+          mappedCells={mappedCellsMap}
           selectedCell={selectedCell}
         />
       </div>

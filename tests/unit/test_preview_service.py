@@ -1,7 +1,7 @@
 import io
 import pandas as pd
 from openpyxl import Workbook
-from backend.services.preview_service import preview_source, preview_template
+from backend.excel import preview_source, preview_template
 
 
 def _create_source_xlsx() -> bytes:

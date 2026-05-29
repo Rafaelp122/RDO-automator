@@ -1,6 +1,6 @@
 import io
 from openpyxl import Workbook
-from backend.utils.template_manager import TemplateManager
+from backend.excel import TemplateManager
 
 
 def _create_template_xlsx() -> bytes:

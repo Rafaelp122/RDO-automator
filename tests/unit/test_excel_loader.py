@@ -1,6 +1,6 @@
 import io
 import pandas as pd
-from backend.utils.excel_loader import ExcelLoader
+from backend.excel import ExcelLoader
 
 def test_load_all_sheets_from_bytesio():
     buffer = io.BytesIO()
