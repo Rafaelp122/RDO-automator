@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { AccordionSection } from './components/AccordionSection';
+import { ContractFields } from './components/ContractFields';
 import { FileUpload } from './components/FileUpload';
 import { DataPreview } from './components/DataPreview';
 import { TemplatePreview } from './components/TemplatePreview';
@@ -52,6 +53,10 @@ export default function App() {
   const [dataSourceFile, setDataSourceFile] = useState<string | null>(null);
   const [templateFile, setTemplateFile] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [contractStart, setContractStart] = useState<string>("2026-01-01");
+  const [contractPrazo, setContractPrazo] = useState<number>(30);
+  const [contractMes, setContractMes] = useState<number>(1);
+  const [contractAno, setContractAno] = useState<number>(2026);
 
   const handleGenerate = () => {
     setIsGenerating(true);
@@ -89,6 +94,18 @@ export default function App() {
           onToggle={() => setActiveSegment(activeSegment === 1 ? 0 : 1)}
         >
           <div className="py-2">
+            <ContractFields
+              startDate={contractStart}
+              prazo={contractPrazo}
+              mes={contractMes}
+              ano={contractAno}
+              onChange={(field, value) => {
+                if (field === "startDate") setContractStart(value as string);
+                else if (field === "prazo") setContractPrazo(value as number);
+                else if (field === "mes") setContractMes(value as number);
+                else if (field === "ano") setContractAno(value as number);
+              }}
+            />
             <FileUpload 
               label="Planilha de Origem" 
               selectedFileName={dataSourceFile}
@@ -177,8 +194,8 @@ export default function App() {
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
           <span className="text-[12px] font-semibold text-[var(--color-text-secondary)]">
             {isFormComplete 
-              ? 'Sistema Operacional - Pronto para gerar' 
-              : 'Sistema Operacional - Aguardando configuração'}
+              ? 'Pronto para gerar' 
+              : 'Aguardando configuração'}
           </span>
         </div>
         <button 
