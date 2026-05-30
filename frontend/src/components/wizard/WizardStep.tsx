@@ -1,5 +1,7 @@
 import { use, type ReactNode } from 'react';
-import { ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
+import ChevronUp from 'lucide-react/dist/esm/icons/chevron-up';
+import Lock from 'lucide-react/dist/esm/icons/lock';
 import { motion, AnimatePresence } from 'motion/react';
 import { WizardContext } from './WizardProvider';
 

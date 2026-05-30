@@ -1,5 +1,7 @@
 import { use } from 'react';
-import { X, AlertCircle, FileText } from 'lucide-react';
+import XIcon from 'lucide-react/dist/esm/icons/x';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
 import { MappingContext } from './MappingProvider';
 import { DataSourceContext } from '../datasource/DataSourceProvider';
 import { TemplatePreviewInteractive } from '../templatepreview/TemplatePreviewInteractive';
@@ -175,7 +177,7 @@ export function MappingSection() {
                       className="text-slate-400 hover:text-red-500 transition-colors p-1 ml-1"
                       title="Remover mapeamento"
                     >
-                      <X size={14} />
+                      <XIcon size={14} />
                     </button>
                   </div>
                 </div>

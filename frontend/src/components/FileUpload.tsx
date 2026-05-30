@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, type DragEvent, type ChangeEvent } from 'react';
-import { Upload, FileSpreadsheet } from 'lucide-react';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import FileSpreadsheet from 'lucide-react/dist/esm/icons/file-spreadsheet';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 

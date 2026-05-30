@@ -1,4 +1,4 @@
-import { useState, useEffect, use } from 'react';
+import { useState, useMemo, use } from 'react';
 import { DataSourceContext } from './DataSourceProvider';
 
 export function DataPreview() {
@@ -7,15 +7,17 @@ export function DataPreview() {
     actions: { toggleSheet, toggleColumn, confirm },
   } = use(DataSourceContext)!;
 
-  const [activeTabName, setActiveTabName] = useState<string>(sheets[0]?.name ?? '');
+  const [activeTabName, setActiveTabName] = useState<string>(() => sheets[0]?.name ?? '');
 
-  useEffect(() => {
-    if (!sheets.find((s) => s.name === activeTabName)) {
-      setActiveTabName(sheets[0]?.name ?? '');
-    }
-  }, [sheets, activeTabName]);
+  const activeSheet = useMemo(
+    () => sheets.find((s) => s.name === activeTabName) ?? sheets[0],
+    [sheets, activeTabName],
+  );
 
-  const activeSheet = sheets.find((s) => s.name === activeTabName) ?? sheets[0];
+  const selectedColumnsSet = useMemo(
+    () => new Set(activeSheet?.selectedColumns ?? []),
+    [activeSheet?.selectedColumns],
+  );
 
   const selectedSheetsCount = sheets.filter((s) => s.selected).length;
   const totalSelectedColumns = sheets.reduce(
@@ -81,7 +83,7 @@ export function DataPreview() {
                       <input
                         type="checkbox"
                         className="rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)] cursor-pointer"
-                        checked={activeSheet.selectedColumns.includes(header)}
+                        checked={selectedColumnsSet.has(header)}
                         onChange={() => toggleColumn(activeSheet.name, header)}
                         disabled={!activeSheet.selected}
                       />
@@ -104,7 +106,7 @@ export function DataPreview() {
                 <tr key={rowIdx} className={activeSheet.selected ? 'hover:bg-slate-50' : 'bg-slate-50/50'}>
                   {row.map((cell, cellIdx) => {
                     const header = activeSheet.columns[cellIdx];
-                    const isColSelected = header ? activeSheet.selectedColumns.includes(header) : false;
+                    const isColSelected = header ? selectedColumnsSet.has(header) : false;
                     return (
                       <td
                         key={cellIdx}
