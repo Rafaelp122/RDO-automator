@@ -1,5 +1,4 @@
 import io
-import re
 from typing import BinaryIO
 
 import pandas as pd
@@ -13,6 +12,8 @@ def load_source_data(file: BinaryIO, header_row: int = 0) -> dict[str, pd.DataFr
     """Carrega todas as abas de uma planilha Excel e normaliza datas."""
     logger.info("Lendo dados do arquivo (header na linha %d)", header_row)
     sheets = pd.read_excel(file, sheet_name=None, header=header_row)
+    for sheet_name in sheets:
+        sheets[sheet_name] = sheets[sheet_name].convert_dtypes()
     return _normalize_dates(sheets)
 
 
@@ -31,13 +32,19 @@ def find_date_column(df: pd.DataFrame) -> str:
 
 
 def _normalize_dates(sheets: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
-    for _sheet_name, df in sheets.items():
+    for sheet_name, df in sheets.items():
         date_col = find_date_column(df)
         if date_col:
+            before_nan = df[date_col].isna().sum()
             df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+            after_nan = df[date_col].isna().sum()
+            new_nat = after_nan - before_nan
+            if new_nat > 0:
+                logger.warning(
+                    "Sheet '%s': %d invalid dates coerced to NaT in column '%s'",
+                    sheet_name, new_nat, date_col,
+                )
             df["_dia_aux"] = df[date_col].dt.day
-        else:
-            df["_dia_aux"] = None
     return sheets
 
 
@@ -48,18 +55,26 @@ def _extract_acronym_candidates(all_sheets: dict[str, pd.DataFrame]) -> list[str
     Retorna uma lista ordenada e sem duplicatas para o frontend
     exibir como sugestões editáveis.
     """
-    candidates: set[str] = set()
-    for df in all_sheets.values():
-        for col in df.columns:
-            for value in df[col].dropna():
-                text = str(value).strip()
-                for word in text.split():
-                    clean = re.sub(r"[^\w]", "", word)
-                    if 2 <= len(clean) <= 4 and clean.isupper() and clean.isalpha():
-                        candidates.add(clean)
+    all_series = [
+        df[col].dropna().astype(str)
+        for df in all_sheets.values()
+        for col in df.columns
+    ]
+    if not all_series:
+        return []
+
+    all_text = pd.concat(all_series, ignore_index=True)
+    words = all_text.str.strip().str.split().explode().dropna()
+    clean = words.str.replace(r"[^\w]", "", regex=True)
+    mask = (
+        clean.str.len().between(2, 4)
+        & clean.str.isupper()
+        & clean.str.isalpha()
+    )
+    candidates = sorted(set(clean[mask]))
 
     logger.info("Siglas candidatas detectadas: %s", candidates)
-    return sorted(candidates)
+    return candidates
 
 
 def preview_source(file_bytes: bytes, filename: str) -> SourcePreviewResponse:
@@ -72,7 +87,7 @@ def preview_source(file_bytes: bytes, filename: str) -> SourcePreviewResponse:
     sheets = []
     for name, df in all_sheets.items():
         cols = [str(c) for c in df.columns if c != "_dia_aux"]
-        rows = df[cols].fillna("").head(20).values.tolist()
+        rows = df[cols].fillna("").head(20).to_numpy().tolist()
         string_rows = [[str(cell) for cell in row] for row in rows]
         sheets.append(SheetData(name=name, columns=cols, data=string_rows))
 

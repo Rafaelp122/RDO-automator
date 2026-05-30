@@ -132,8 +132,9 @@ class ReportGenerator:
                 if column_name not in rows_for_day.columns:
                     continue
 
-                raw_values = rows_for_day[column_name].dropna().unique().tolist()
-                clean_values = [v for v in raw_values if str(v).strip() and str(v).lower() != "nan"]
+                raw_series = rows_for_day[column_name].dropna()
+                raw_series = raw_series[raw_series.astype(str).str.lower() != "nan"]
+                clean_values = raw_series.unique().tolist()
 
                 if clean_values:
                     combined.setdefault(column_name, []).extend(clean_values)
