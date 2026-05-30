@@ -1,5 +1,6 @@
 FROM python:3.14-slim
 WORKDIR /app
-COPY backend/ .
+COPY pyproject.toml uv.lock ./
 RUN pip install uv && uv sync --frozen --no-dev
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+COPY src/ ./src/
+CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]

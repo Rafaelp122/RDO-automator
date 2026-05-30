@@ -1,6 +1,6 @@
 import io
 from openpyxl import Workbook
-from backend.excel import TemplateManager
+from src.excel import TemplateManager
 
 
 def _create_template_xlsx() -> bytes:
@@ -18,7 +18,6 @@ def test_load_from_bytesio():
     data = _create_template_xlsx()
     buffer = io.BytesIO(data)
     tm = TemplateManager(buffer)
-    tm.load()
     assert tm.wb is not None
     assert tm.ws_template is not None
     assert tm.ws_template["A1"].value == "RDO - RELATORIO DIARIO DE OBRA"
@@ -28,7 +27,6 @@ def test_clone_worksheet():
     data = _create_template_xlsx()
     buffer = io.BytesIO(data)
     tm = TemplateManager(buffer)
-    tm.load()
     ws = tm.clone_worksheet("01-01")
     assert ws.title == "01-01"
     assert ws["A1"].value == "RDO - RELATORIO DIARIO DE OBRA"
@@ -39,7 +37,6 @@ def test_save_to_bytesio():
     data = _create_template_xlsx()
     buffer = io.BytesIO(data)
     tm = TemplateManager(buffer)
-    tm.load()
     tm.clone_worksheet("01-01")
     output = io.BytesIO()
     tm.save_to_stream(output)

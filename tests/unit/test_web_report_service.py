@@ -1,7 +1,7 @@
 import io
 import pandas as pd
 from openpyxl import Workbook, load_workbook
-from backend.excel import generate_report
+from src.excel import ReportGenerator
 
 
 def _create_source_xlsx() -> bytes:
@@ -38,7 +38,9 @@ def test_generate_report():
         "listConnector": " e ",
     }
 
-    output = generate_report(source, template, "medicao.xlsx", "template.xlsx", config)
+    output = ReportGenerator(
+        source, template, "medicao.xlsx", "template.xlsx", config
+    ).generate()
     output.seek(0)
 
     wb = load_workbook(output)

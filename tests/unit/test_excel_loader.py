@@ -1,6 +1,7 @@
 import io
 import pandas as pd
-from backend.excel import ExcelLoader
+from src.excel.source import load_source_data, find_date_column
+
 
 def test_load_all_sheets_from_bytesio():
     buffer = io.BytesIO()
@@ -9,8 +10,7 @@ def test_load_all_sheets_from_bytesio():
         pd.DataFrame({"Data": ["2026-01-03"], "Drenagem": ["Tubo 600mm"]}).to_excel(writer, sheet_name="Drenagem", index=False)
     buffer.seek(0)
 
-    loader = ExcelLoader(buffer)
-    result = loader.load_all_sheets()
+    result = load_source_data(buffer)
 
     assert "Pintura" in result
     assert "Drenagem" in result
@@ -18,12 +18,14 @@ def test_load_all_sheets_from_bytesio():
     assert "_dia_aux" in result["Pintura"].columns
     assert result["Pintura"]["_dia_aux"].iloc[0] == 1
 
+
 def test_find_date_column():
     df = pd.DataFrame({"DATA_HOJE": ["2026-01-01"], "Outra": [1]})
-    result = ExcelLoader._find_date_column(df)
+    result = find_date_column(df)
     assert result == "DATA_HOJE"
+
 
 def test_find_date_column_none():
     df = pd.DataFrame({"A": [1], "B": [2]})
-    result = ExcelLoader._find_date_column(df)
+    result = find_date_column(df)
     assert result == ""

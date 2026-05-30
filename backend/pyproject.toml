@@ -23,5 +23,23 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["../tests"]
 python_files = "test_*.py"
-pythonpath = [".", ".."]
+pythonpath = ["."]
 addopts = "-v --tb=short"
+
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/__init__.py",
+    "*/logger.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "pass",
+    "except Exception as e:",
+]

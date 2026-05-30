@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from openpyxl import Workbook, load_workbook
 from fastapi.testclient import TestClient
-from backend.main import app
+from src.main import app
 
 client = TestClient(app)
 
