@@ -9,7 +9,7 @@ def _load_dotenv():
         dotenv_path = ".env"
         if not os.path.exists(dotenv_path) and os.path.exists("../.env"):
             dotenv_path = "../.env"
-            
+
         with open(dotenv_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()

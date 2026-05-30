@@ -42,7 +42,9 @@ def _normalize_dates(sheets: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]
             if new_nat > 0:
                 logger.warning(
                     "Sheet '%s': %d invalid dates coerced to NaT in column '%s'",
-                    sheet_name, new_nat, date_col,
+                    sheet_name,
+                    new_nat,
+                    date_col,
                 )
             df["_dia_aux"] = df[date_col].dt.day
     return sheets
@@ -55,22 +57,14 @@ def _extract_acronym_candidates(all_sheets: dict[str, pd.DataFrame]) -> list[str
     Retorna uma lista ordenada e sem duplicatas para o frontend
     exibir como sugestões editáveis.
     """
-    all_series = [
-        df[col].dropna().astype(str)
-        for df in all_sheets.values()
-        for col in df.columns
-    ]
+    all_series = [df[col].dropna().astype(str) for df in all_sheets.values() for col in df.columns]
     if not all_series:
         return []
 
     all_text = pd.concat(all_series, ignore_index=True)
     words = all_text.str.strip().str.split().explode().dropna()
     clean = words.str.replace(r"[^\w]", "", regex=True)
-    mask = (
-        clean.str.len().between(2, 4)
-        & clean.str.isupper()
-        & clean.str.isalpha()
-    )
+    mask = clean.str.len().between(2, 4) & clean.str.isupper() & clean.str.isalpha()
     candidates = sorted(set(clean[mask]))
 
     logger.info("Siglas candidatas detectadas: %s", candidates)
