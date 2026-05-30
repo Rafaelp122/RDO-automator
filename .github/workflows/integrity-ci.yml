@@ -69,7 +69,7 @@ jobs:
 
       - name: Pyright
         if: needs.detect-changes.outputs.backend == 'true'
-          run: cd backend && uv run pyright src/ tests/ --pythonversion 3.12
+        run: cd backend && uv run pyright src/ tests/ --pythonversion 3.12
 
       - name: Frontend TypeCheck
         if: needs.detect-changes.outputs.frontend == 'true'
