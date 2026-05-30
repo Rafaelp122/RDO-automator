@@ -74,6 +74,9 @@ export function GenerateFooter({ contract }: GenerateFooterProps) {
         <span className="text-[12px] font-semibold text-[var(--color-text-secondary)]">
           {isFormComplete ? 'Pronto para gerar' : 'Aguardando configuração'}
         </span>
+        <span className="text-[9px] text-[var(--color-text-muted)] bg-slate-100 px-2 py-0.5 rounded-full hidden sm:inline">
+          Processamento 100% em memória — nenhum dado é armazenado
+        </span>
       </div>
       <button
         className="btn-primary flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
