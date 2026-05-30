@@ -1,11 +1,20 @@
 import type { SourcePreviewResponse, TemplatePreviewResponse, GenerateConfig } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_KEY = import.meta.env.VITE_API_KEY || "";
+
+function headers(): Record<string, string> {
+  return API_KEY ? { "X-API-Key": API_KEY } : {};
+}
 
 export async function previewSource(file: File): Promise<SourcePreviewResponse> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${API_URL}/api/preview/source`, { method: "POST", body: form });
+  const res = await fetch(`${API_URL}/api/preview/source`, {
+    method: "POST",
+    body: form,
+    headers: headers(),
+  });
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Erro ao enviar arquivo de origem");
@@ -16,7 +25,11 @@ export async function previewSource(file: File): Promise<SourcePreviewResponse> 
 export async function previewTemplate(file: File): Promise<TemplatePreviewResponse> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${API_URL}/api/preview/template`, { method: "POST", body: form });
+  const res = await fetch(`${API_URL}/api/preview/template`, {
+    method: "POST",
+    body: form,
+    headers: headers(),
+  });
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Erro ao enviar template");
@@ -34,7 +47,11 @@ export async function generateReport(
   form.append("template", template);
   form.append("config", JSON.stringify(config));
 
-  const res = await fetch(`${API_URL}/api/generate`, { method: "POST", body: form });
+  const res = await fetch(`${API_URL}/api/generate`, {
+    method: "POST",
+    body: form,
+    headers: headers(),
+  });
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.detail || "Erro ao gerar relatorio");

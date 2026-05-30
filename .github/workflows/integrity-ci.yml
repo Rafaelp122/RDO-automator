@@ -151,23 +151,4 @@ jobs:
             --min-instances 0 \
             --allow-unauthenticated
 
-  # ---------------------------------------------------------------------------
-  # JOB 5: DEPLOY FRONTEND (Vercel)
-  # ---------------------------------------------------------------------------
-  deploy-frontend:
-    name: Deploy Frontend (Vercel)
-    needs: [detect-changes, frontend-build]
-    if: |
-      github.ref == 'refs/heads/master' &&
-      github.event_name == 'push' &&
-      needs.detect-changes.outputs.frontend == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./frontend
+

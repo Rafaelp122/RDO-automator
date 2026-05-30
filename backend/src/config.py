@@ -19,6 +19,8 @@ class Settings:
 
     max_upload_mb: int = int(os.environ.get("MAX_UPLOAD_MB", "50"))
 
+    api_key: str = os.environ.get("API_KEY", "")
+
     log_level: str = os.environ.get("LOG_LEVEL", "INFO").upper()
     log_format: str = os.environ.get("LOG_FORMAT", "")
     log_path: str = os.environ.get("LOG_PATH", "/tmp/rdo_automator.log")

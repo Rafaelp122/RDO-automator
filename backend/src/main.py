@@ -25,6 +25,26 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class ApiKeyMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, api_key: str):
+        super().__init__(app)
+        self._api_key = api_key
+
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/health":
+            return await call_next(request)
+        if not self._api_key:
+            return await call_next(request)
+        if request.headers.get("X-API-Key", "") != self._api_key:
+            return JSONResponse(
+                status_code=401,
+                content=ErrorResponse(
+                    detail="API key inválida ou ausente", code="unauthorized"
+                ).model_dump(),
+            )
+        return await call_next(request)
+
+
 def create_app(app_settings: Settings | None = None) -> FastAPI:
     """Factory que cria e configura a aplicação FastAPI.
 
@@ -45,6 +65,8 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     )
 
     app.add_middleware(SecurityHeadersMiddleware)
+
+    app.add_middleware(ApiKeyMiddleware, api_key=app_settings.api_key)
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError):
