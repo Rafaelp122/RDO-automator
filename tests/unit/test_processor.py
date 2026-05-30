@@ -1,26 +1,30 @@
 import pytest
+
 from src.excel.processor import TextProcessor
 
 
 class TestTextProcessor:
-
-    @pytest.mark.parametrize("input_text, acronyms, expected", [
-        ("INSTALAÇÃO DE LUMINÁRIA LED", ["LED"], "Instalação de Luminária LED"),
-        ("MANUTENÇÃO NO RIO DE JANEIRO RJ", ["RJ"], "Manutenção no Rio de Janeiro RJ"),
-        ("D'AREIA E PCD", ["PCD"], "D'Areia e PCD"),
-        ("sistema bhls e ip", ["BHLS", "IP"], "Sistema BHLS e IP"),
-        ("limpeza de caixa de ralo", [], "Limpeza de Caixa de Ralo"),
-        ("INSTALAÇÃO DE LUMINÁRIA LED", [], "Instalação de Luminária Led"),
-        ("", [], ""),
-        (None, None, ""),
-    ])
+    @pytest.mark.parametrize(
+        "input_text, acronyms, expected",
+        [
+            ("INSTALAÇÃO DE LUMINÁRIA LED", ["LED"], "Instalação de Luminária LED"),
+            ("MANUTENÇÃO NO RIO DE JANEIRO RJ", ["RJ"], "Manutenção no Rio de Janeiro RJ"),
+            ("D'AREIA E PCD", ["PCD"], "D'Areia e PCD"),
+            ("sistema bhls e ip", ["BHLS", "IP"], "Sistema BHLS e IP"),
+            ("limpeza de caixa de ralo", [], "Limpeza de Caixa de Ralo"),
+            ("INSTALAÇÃO DE LUMINÁRIA LED", [], "Instalação de Luminária Led"),
+            ("", [], ""),
+            (None, None, ""),
+        ],
+    )
     def test_fix_capitalization(self, input_text, acronyms, expected):
         assert TextProcessor.fix_capitalization(input_text, acronyms=acronyms) == expected
 
     def test_without_acronyms(self):
-        assert TextProcessor.fix_capitalization(
-            "INSTALAÇÃO DE LUMINÁRIA LED"
-        ) == "Instalação de Luminária Led"
+        assert (
+            TextProcessor.fix_capitalization("INSTALAÇÃO DE LUMINÁRIA LED")
+            == "Instalação de Luminária Led"
+        )
 
     def test_format_summary_simple(self):
         data = {"Serviço": ["Pintura", "LIMPEZA"]}
@@ -36,7 +40,10 @@ class TestTextProcessor:
 
     def test_format_summary_nos_plural(self):
         data = {"Serviço": ["Pintura"], "Bairro": ["Centro", "Tijuca"]}
-        template = "Serviço{Serviço:s} {Serviço} realizado{Serviço:s} no{Bairro:nos} bairro{Bairro:s} {Bairro}."
+        template = (
+            "Serviço{Serviço:s} {Serviço}"
+            " realizado{Serviço:s} no{Bairro:nos} bairro{Bairro:s} {Bairro}."
+        )
         result = TextProcessor.format_summary(data, template)
         assert result == "Serviço Pintura realizado nos bairros Centro e Tijuca."
 

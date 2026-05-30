@@ -1,0 +1,175 @@
+name: Integrity CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # JOB 0: DETECT PATHS
+  # ---------------------------------------------------------------------------
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/integrity-ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/integrity-ci.yml'
+
+  # ---------------------------------------------------------------------------
+  # JOB 1: LINT & TYPE CHECK (fail-fast)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint & Type Check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python & UV
+        if: needs.detect-changes.outputs.backend == 'true'
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Setup Node
+        if: needs.detect-changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Ruff Check
+        if: needs.detect-changes.outputs.backend == 'true'
+        run: cd backend && uv run ruff check . ../tests/
+
+      - name: Ruff Format Check
+        if: needs.detect-changes.outputs.backend == 'true'
+        run: cd backend && uv run ruff format --check . ../tests/
+
+      - name: Pyright
+        if: needs.detect-changes.outputs.backend == 'true'
+        run: cd backend && uv run pyright src/ --pythonversion 3.11
+
+      - name: Frontend TypeCheck
+        if: needs.detect-changes.outputs.frontend == 'true'
+        run: |
+          cd frontend
+          npm ci
+          npx tsc --noEmit
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: BACKEND TESTS
+  # ---------------------------------------------------------------------------
+  backend-tests:
+    name: Backend Tests
+    needs: [detect-changes, lint]
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+      - name: pytest
+        run: cd backend && uv run pytest ../tests/ -v
+
+  # ---------------------------------------------------------------------------
+  # JOB 3: FRONTEND BUILD
+  # ---------------------------------------------------------------------------
+  frontend-build:
+    name: Frontend Build
+    needs: [detect-changes, lint]
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+  # ---------------------------------------------------------------------------
+  # JOB 4: DEPLOY BACKEND (Cloud Run)
+  # ---------------------------------------------------------------------------
+  deploy-backend:
+    name: Deploy Backend (Cloud Run)
+    needs: [detect-changes, backend-tests]
+    if: |
+      github.ref == 'refs/heads/master' &&
+      github.event_name == 'push' &&
+      needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build and push
+        run: |
+          gcloud builds submit backend/ \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/rdo-automator:${{ github.sha }}
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy rdo-automator \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/rdo-automator:${{ github.sha }} \
+            --platform managed \
+            --region us-central1 \
+            --memory 512Mi \
+            --timeout 3600 \
+            --max-instances 1 \
+            --min-instances 0 \
+            --allow-unauthenticated
+
+  # ---------------------------------------------------------------------------
+  # JOB 5: DEPLOY FRONTEND (Vercel)
+  # ---------------------------------------------------------------------------
+  deploy-frontend:
+    name: Deploy Frontend (Vercel)
+    needs: [detect-changes, frontend-build]
+    if: |
+      github.ref == 'refs/heads/master' &&
+      github.event_name == 'push' &&
+      needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./frontend

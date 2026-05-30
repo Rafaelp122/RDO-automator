@@ -1,8 +1,10 @@
 import io
 import json
+
 import pandas as pd
-from openpyxl import Workbook, load_workbook
 from fastapi.testclient import TestClient
+from openpyxl import Workbook, load_workbook
+
 from src.main import app
 
 client = TestClient(app)
@@ -11,11 +13,13 @@ client = TestClient(app)
 def test_full_flow():
     source_buffer = io.BytesIO()
     with pd.ExcelWriter(source_buffer, engine="openpyxl") as writer:
-        df1 = pd.DataFrame({
-            "Data": ["2026-01-05", "2026-01-10", "2026-01-15", "2026-01-20"],
-            "Serviço": ["Pintura", "Concretagem", "Escavacao", "Armação"],
-            "Bairro": ["Centro", "Vista Alegre", "Centro", "Leste"],
-        })
+        df1 = pd.DataFrame(
+            {
+                "Data": ["2026-01-05", "2026-01-10", "2026-01-15", "2026-01-20"],
+                "Serviço": ["Pintura", "Concretagem", "Escavacao", "Armação"],
+                "Bairro": ["Centro", "Vista Alegre", "Centro", "Leste"],
+            }
+        )
         df1.to_excel(writer, sheet_name="Relatorio_Geral", index=False)
     source_buffer.seek(0)
 
@@ -44,8 +48,16 @@ def test_full_flow():
     response = client.post(
         "/api/generate",
         files={
-            "source": ("medicao.xlsx", source_buffer.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            "template": ("template.xlsx", template_buffer.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            "source": (
+                "medicao.xlsx",
+                source_buffer.getvalue(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ),
+            "template": (
+                "template.xlsx",
+                template_buffer.getvalue(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ),
         },
         data={"config": json.dumps(config)},
     )

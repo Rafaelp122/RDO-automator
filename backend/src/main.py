@@ -4,8 +4,8 @@ from fastapi.responses import JSONResponse
 
 from src.config import Settings, settings
 from src.exceptions import AppError
-from src.schemas import ErrorResponse
 from src.routes import router
+from src.schemas import ErrorResponse
 
 
 def create_app(app_settings: Settings | None = None) -> FastAPI:
@@ -37,15 +37,14 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     @app.middleware("http")
     async def max_upload_size_middleware(request: Request, call_next):
         content_length = request.headers.get("content-length")
-        if content_length:
-            if int(content_length) > app_settings.max_upload_bytes:
-                return JSONResponse(
-                    status_code=413,
-                    content=ErrorResponse(
-                        detail=f"Payload excede o limite de {app_settings.max_upload_mb} MB",
-                        code="payload_too_large",
-                    ).model_dump(),
-                )
+        if content_length and int(content_length) > app_settings.max_upload_bytes:
+            return JSONResponse(
+                status_code=413,
+                content=ErrorResponse(
+                    detail=f"Payload excede o limite de {app_settings.max_upload_mb} MB",
+                    code="payload_too_large",
+                ).model_dump(),
+            )
         return await call_next(request)
 
     @app.get("/health")

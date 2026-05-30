@@ -1,13 +1,19 @@
 import io
+
 import pandas as pd
-from src.excel.source import load_source_data, find_date_column
+
+from src.excel.source import find_date_column, load_source_data
 
 
 def test_load_all_sheets_from_bytesio():
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-        pd.DataFrame({"Data": ["2026-01-01", "2026-01-02"], "Atividade": ["Escavacao", "Concretagem"]}).to_excel(writer, sheet_name="Pintura", index=False)
-        pd.DataFrame({"Data": ["2026-01-03"], "Drenagem": ["Tubo 600mm"]}).to_excel(writer, sheet_name="Drenagem", index=False)
+        pd.DataFrame(
+            {"Data": ["2026-01-01", "2026-01-02"], "Atividade": ["Escavacao", "Concretagem"]}
+        ).to_excel(writer, sheet_name="Pintura", index=False)
+        pd.DataFrame({"Data": ["2026-01-03"], "Drenagem": ["Tubo 600mm"]}).to_excel(
+            writer, sheet_name="Drenagem", index=False
+        )
     buffer.seek(0)
 
     result = load_source_data(buffer)

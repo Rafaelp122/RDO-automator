@@ -7,9 +7,9 @@ from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as OpenpyxlImage
 from openpyxl.utils.exceptions import InvalidFileException
 
+from src.exceptions import InvalidFileExtension
 from src.logger import logger
 from src.schemas import CellData, ImageData, TemplatePreviewResponse, TemplateSheet
-from src.exceptions import InvalidFileExtension
 
 
 class TemplateManager:
@@ -21,32 +21,34 @@ class TemplateManager:
 
     def __init__(self, file: BinaryIO):
         self.file = file
-        self.wb = None
-        self.ws_template = None
-        self.extracted_images: list[dict] = []
-        self._load()
+        self.wb, self.ws_template, self.extracted_images = self._load(file)
 
     @property
     def worksheets(self):
         """Abas do workbook carregado."""
         return self.wb.worksheets
 
-    def _load(self):
+    def _load(self, file: BinaryIO) -> tuple:
+        """Abre o workbook, extrai imagens e retorna (wb, ws_template, images)."""
         try:
-            self.wb = load_workbook(self.file)
-            self.ws_template = self.wb.active
-            if hasattr(self.ws_template, "_images"):
-                for img in self.ws_template._images:
-                    result = _read_image_data(img)
-                    if result:
-                        img_bytes, anchor = result
-                        self.extracted_images.append({"bytes": img_bytes, "anchor": anchor})
-                    else:
-                        logger.warning("Nao foi possivel ler uma imagem do template")
-                self.ws_template._images = []
+            wb = load_workbook(file)
+            ws_template = wb.active
+            images: list[dict] = []
+            ws_images: list = getattr(ws_template, "_images", [])
+            for img in ws_images:
+                result = _read_image_data(img)
+                if result:
+                    img_bytes, anchor = result
+                    images.append({"bytes": img_bytes, "anchor": anchor})
+                else:
+                    logger.warning("Nao foi possivel ler uma imagem do template")
+            setattr(ws_template, "_images", [])  # noqa: B010
+            return wb, ws_template, images
         except InvalidFileException as e:
             logger.exception("Erro ao abrir template Excel")
-            raise InvalidFileExtension(f"O arquivo de template nao e um Excel (.xlsx) valido: {e}")
+            raise InvalidFileExtension(
+                f"O arquivo de template nao e um Excel (.xlsx) valido: {e}"
+            ) from e
 
     def clone_worksheet(self, title: str):
         new_ws = self.wb.copy_worksheet(self.ws_template)
@@ -96,28 +98,31 @@ def preview_template(file_bytes: bytes, filename: str) -> TemplatePreviewRespons
                 font_info = None
                 if cell.font:
                     font_info = {"bold": cell.font.bold, "size": cell.font.size}
-                cells.append(CellData(
-                    coord=cell.coordinate, row=cell.row, col=cell.column,
-                    value=str(cell.value) if cell.value is not None else None,
-                    font=font_info,
-                ))
+                cells.append(
+                    CellData(
+                        coord=cell.coordinate or "",
+                        row=cell.row or 0,
+                        col=cell.column or 0,
+                        value=str(cell.value) if cell.value is not None else None,
+                        font=font_info,
+                    )
+                )
 
         images = []
-        if hasattr(ws, "_images"):
-            for img in ws._images:
-                result = _read_image_data(img)
-                if result is None:
-                    logger.warning("Failed to extract image")
-                    continue
-                img_bytes, _anchor = result
-                b64 = base64.b64encode(img_bytes).decode()
-                position = {}
-                if hasattr(img.anchor, "_from"):
-                    position["col"] = img.anchor._from.col
-                    position["row"] = img.anchor._from.row
-                    position["colOff"] = img.anchor._from.colOff
-                    position["rowOff"] = img.anchor._from.rowOff
-                images.append(ImageData(b64=f"data:image/png;base64,{b64}", position=position))
+        for img in getattr(ws, "_images", []):
+            result = _read_image_data(img)
+            if result is None:
+                logger.warning("Failed to extract image")
+                continue
+            img_bytes, _anchor = result
+            b64 = base64.b64encode(img_bytes).decode()
+            position = {}
+            if hasattr(img.anchor, "_from"):
+                position["col"] = img.anchor._from.col
+                position["row"] = img.anchor._from.row
+                position["colOff"] = img.anchor._from.colOff
+                position["rowOff"] = img.anchor._from.rowOff
+            images.append(ImageData(b64=f"data:image/png;base64,{b64}", position=position))
 
         all_sheets.append(TemplateSheet(name=ws.title, cells=cells, images=images, merged=[]))
 

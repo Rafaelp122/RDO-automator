@@ -1,14 +1,14 @@
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
         entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -29,9 +29,13 @@ def setup_logger(name="rdo_automator", log_path=None, level=None):
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
     use_json = os.environ.get("LOG_FORMAT", "").lower() == "json"
-    formatter = JsonFormatter() if use_json else logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+    formatter = (
+        JsonFormatter()
+        if use_json
+        else logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
     )
 
     console_handler = logging.StreamHandler()

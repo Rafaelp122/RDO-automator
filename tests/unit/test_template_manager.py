@@ -1,5 +1,7 @@
 import io
+
 from openpyxl import Workbook
+
 from src.excel import TemplateManager
 
 

@@ -3,8 +3,21 @@ import re
 
 class TextProcessor:
     PREPOSITIONS = [
-        "de", "da", "do", "das", "dos", "e", "em", "com",
-        "no", "na", "á", "à", "a", "ou", "para",
+        "de",
+        "da",
+        "do",
+        "das",
+        "dos",
+        "e",
+        "em",
+        "com",
+        "no",
+        "na",
+        "á",
+        "à",
+        "a",
+        "ou",
+        "para",
     ]
 
     @classmethod
@@ -111,13 +124,7 @@ class TextProcessor:
         result = format_template
         for column, data in processed.items():
             result = result.replace(f"{{{column}}}", data["text"])
-            result = result.replace(
-                f"{{{column}:s}}", "s" if data["plural"] else ""
-            )
-            result = result.replace(
-                f"{{{column}:es}}", "es" if data["plural"] else ""
-            )
-            result = result.replace(
-                f"{{{column}:nos}}", "s" if data["plural"] else ""
-            )
+            result = result.replace(f"{{{column}:s}}", "s" if data["plural"] else "")
+            result = result.replace(f"{{{column}:es}}", "es" if data["plural"] else "")
+            result = result.replace(f"{{{column}:nos}}", "s" if data["plural"] else "")
         return result

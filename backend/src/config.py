@@ -8,9 +8,14 @@ def _parse_allowed_origins(raw: str) -> list[str]:
 
 @dataclass
 class Settings:
-    allowed_origins: list[str] = field(default_factory=lambda: _parse_allowed_origins(
-        os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173,https://rdo.vercel.app")
-    ))
+    allowed_origins: list[str] = field(
+        default_factory=lambda: _parse_allowed_origins(
+            os.environ.get(
+                "ALLOWED_ORIGINS",
+                "http://localhost:3000,http://localhost:5173,https://rdo.vercel.app",
+            )
+        )
+    )
 
     max_upload_mb: int = int(os.environ.get("MAX_UPLOAD_MB", "50"))
 

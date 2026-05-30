@@ -7,12 +7,12 @@ from datetime import datetime
 
 from pydantic import ValidationError
 
-from src.logger import logger
 from src.excel.processor import TextProcessor
-from src.schemas import GenerateConfig
-from src.exceptions import InvalidFileExtension, InvalidConfigError
 from src.excel.source import load_source_data
 from src.excel.template import TemplateManager
+from src.exceptions import InvalidConfigError, InvalidFileExtension
+from src.logger import logger
+from src.schemas import GenerateConfig
 
 
 class ReportGenerator:
@@ -66,14 +66,14 @@ class ReportGenerator:
             try:
                 config_dict = json.loads(self.raw_config)
             except json.JSONDecodeError as error:
-                raise InvalidConfigError(f"JSON invalido: {error}")
+                raise InvalidConfigError(f"JSON invalido: {error}") from error
         else:
             config_dict = self.raw_config
 
         try:
             validated = GenerateConfig(**config_dict)
         except ValidationError as error:
-            raise InvalidConfigError(str(error))
+            raise InvalidConfigError(str(error)) from error
 
         return validated.model_dump()
 
@@ -133,10 +133,7 @@ class ReportGenerator:
                     continue
 
                 raw_values = rows_for_day[column_name].dropna().unique().tolist()
-                clean_values = [
-                    v for v in raw_values
-                    if str(v).strip() and str(v).lower() != "nan"
-                ]
+                clean_values = [v for v in raw_values if str(v).strip() and str(v).lower() != "nan"]
 
                 if clean_values:
                     combined.setdefault(column_name, []).extend(clean_values)

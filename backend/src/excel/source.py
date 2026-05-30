@@ -4,9 +4,9 @@ from typing import BinaryIO
 
 import pandas as pd
 
+from src.exceptions import InvalidFileExtension
 from src.logger import logger
 from src.schemas import SheetData, SourcePreviewResponse
-from src.exceptions import InvalidFileExtension
 
 
 def load_source_data(file: BinaryIO, header_row: int = 0) -> dict[str, pd.DataFrame]:
@@ -31,7 +31,7 @@ def find_date_column(df: pd.DataFrame) -> str:
 
 
 def _normalize_dates(sheets: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
-    for sheet_name, df in sheets.items():
+    for _sheet_name, df in sheets.items():
         date_col = find_date_column(df)
         if date_col:
             df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
@@ -55,11 +55,7 @@ def _extract_acronym_candidates(all_sheets: dict[str, pd.DataFrame]) -> list[str
                 text = str(value).strip()
                 for word in text.split():
                     clean = re.sub(r"[^\w]", "", word)
-                    if (
-                        2 <= len(clean) <= 4
-                        and clean.isupper()
-                        and clean.isalpha()
-                    ):
+                    if 2 <= len(clean) <= 4 and clean.isupper() and clean.isalpha():
                         candidates.add(clean)
 
     logger.info("Siglas candidatas detectadas: %s", candidates)
@@ -82,5 +78,7 @@ def preview_source(file_bytes: bytes, filename: str) -> SourcePreviewResponse:
 
     acronyms = _extract_acronym_candidates(all_sheets)
 
-    logger.info("Preview source: %d sheets, %d acronyms from %s", len(sheets), len(acronyms), filename)
+    logger.info(
+        "Preview source: %d sheets, %d acronyms from %s", len(sheets), len(acronyms), filename
+    )
     return SourcePreviewResponse(sheets=sheets, filename=filename, suggestedAcronyms=acronyms)

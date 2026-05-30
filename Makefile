@@ -1,4 +1,4 @@
-.PHONY: help install run fe test lint check docker-build docker-run clean
+.PHONY: help install run fe test lint lint-backend lint-frontend format check docker-build docker-run clean
 
 # ---------------------------------------------------------------------------
 # RDO Automator — Gerador de Diários de Obra
@@ -22,7 +22,10 @@ help:
 	@echo ""
 	@echo "🧪 TESTES & QUALIDADE"
 	@echo "  make test                - Roda os 29 testes (unidade + integração)"
-	@echo "  make lint                - TypeCheck do frontend (tsc --noEmit)"
+	@echo "  make lint                - Ruff + Pyright + tsc (tudo)"
+	@echo "  make lint-backend        - Ruff check + Pyright"
+	@echo "  make lint-frontend       - tsc --noEmit"
+	@echo "  make format              - Ruff format (ordena imports, corrige estilo)"
 	@echo "  make check               - test + lint (use antes de commit)"
 	@echo ""
 	@echo "🧹 MANUTENÇÃO"
@@ -46,8 +49,19 @@ fe:
 test:
 	cd backend && uv run pytest ../tests/
 
-lint:
+lint: lint-backend lint-frontend
+
+lint-backend:
+	cd backend && uv run ruff check . ../tests/
+	cd backend && uv run ruff format --check . ../tests/
+	cd backend && uv run pyright src/ --pythonversion 3.11
+
+lint-frontend:
 	cd frontend && npx tsc --noEmit
+
+format:
+	cd backend && uv run ruff check --fix . ../tests/
+	cd backend && uv run ruff format . ../tests/
 
 check: test lint
 

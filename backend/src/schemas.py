@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class SheetData(BaseModel):
@@ -28,8 +27,8 @@ class CellData(BaseModel):
     coord: str
     row: int
     col: int
-    value: Optional[str] = None
-    font: Optional[dict[str, Optional[int | bool]]] = None
+    value: str | None = None
+    font: dict[str, int | bool | None] | None = None
 
 
 class ImageData(BaseModel):

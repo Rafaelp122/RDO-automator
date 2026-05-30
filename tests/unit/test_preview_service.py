@@ -1,13 +1,17 @@
 import io
+
 import pandas as pd
 from openpyxl import Workbook
+
 from src.excel import preview_source, preview_template
 
 
 def _create_source_xlsx() -> bytes:
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-        pd.DataFrame({"Data": ["2026-01-01"], "Atividade": ["Escavacao"]}).to_excel(writer, sheet_name="Obra", index=False)
+        pd.DataFrame({"Data": ["2026-01-01"], "Atividade": ["Escavacao"]}).to_excel(
+            writer, sheet_name="Obra", index=False
+        )
     buffer.seek(0)
     return buffer.read()
 
@@ -15,10 +19,12 @@ def _create_source_xlsx() -> bytes:
 def _create_source_xlsx_with_acronyms() -> bytes:
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-        pd.DataFrame({
-            "Data": ["2026-01-01", "2026-01-02"],
-            "Serviço": ["Pintura LED externa", "Troca de PCD e BHLS"],
-        }).to_excel(writer, sheet_name="Obra", index=False)
+        pd.DataFrame(
+            {
+                "Data": ["2026-01-01", "2026-01-02"],
+                "Serviço": ["Pintura LED externa", "Troca de PCD e BHLS"],
+            }
+        ).to_excel(writer, sheet_name="Obra", index=False)
     buffer.seek(0)
     return buffer.read()
 

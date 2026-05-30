@@ -1,0 +1,12 @@
+{
+  "include": ["src"],
+  "exclude": ["**/__pycache__", ".venv", "**/test_*.py"],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnknownMemberType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownVariableType": false,
+  "reportUnknownParameterType": false
+}
