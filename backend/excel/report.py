@@ -18,11 +18,22 @@ def generate_report(
     template_filename: str,
     config: dict | str,
 ) -> io.BytesIO:
+    _validate_files(source_filename, template_filename)
+    cfg = _parse_config(config)
+    source_data = _load_source(source_bytes)
+    tm = _load_template(template_bytes)
+    _build_report(tm, source_data, cfg)
+    return _save(tm)
+
+
+def _validate_files(source_filename: str, template_filename: str):
     if not source_filename.lower().endswith((".xlsx", ".xls")):
         raise InvalidFileExtension("Arquivo de origem deve ser .xlsx ou .xls")
     if not template_filename.lower().endswith(".xlsx"):
         raise InvalidFileExtension("Template deve ser .xlsx")
 
+
+def _parse_config(config: dict | str) -> dict:
     if isinstance(config, str):
         try:
             config_dict = json.loads(config)
@@ -36,62 +47,74 @@ def generate_report(
     except Exception as e:
         raise InvalidConfigError(str(e))
 
-    cfg = parsed.model_dump()
-    contract = cfg["contract"]
-    mappings = cfg["mappings"]
-    list_separator = cfg.get("listSeparator", ", ")
-    list_connector = cfg.get("listConnector", " e ")
+    return parsed.model_dump()
 
+
+def _load_source(source_bytes: bytes) -> dict:
     loader = ExcelLoader(io.BytesIO(source_bytes))
-    abas_origem = loader.load_all_sheets()
+    return loader.load_all_sheets()
 
+
+def _load_template(template_bytes: bytes) -> TemplateManager:
     tm = TemplateManager(io.BytesIO(template_bytes))
     tm.load()
+    return tm
 
-    ano = contract["ano"]
-    mes = contract["mes"]
+
+def _build_report(tm: TemplateManager, source_data: dict, cfg: dict):
+    contract = cfg["contract"]
+    mappings = cfg["mappings"]
+    separator = cfg.get("listSeparator", ", ")
+    connector = cfg.get("listConnector", " e ")
+    ano, mes = contract["ano"], contract["mes"]
     _, ultimo_dia = calendar.monthrange(ano, mes)
 
     logger.info("Gerando relatorio: mes=%d/%d, %d mappings", mes, ano, len(mappings))
 
     for dia in range(1, ultimo_dia + 1):
-        data_atual = datetime(ano, mes, dia)
-        ws = tm.clone_worksheet(data_atual.strftime("%d-%m"))
-
+        ws = tm.clone_worksheet(datetime(ano, mes, dia).strftime("%d-%m"))
         for mapping in mappings:
-            celula = mapping.get("templateCell", "")
-            if not celula:
+            _fill_cell(ws, source_data, dia, mapping, separator, connector)
+
+
+def _fill_cell(ws, source_data: dict, dia: int, mapping: dict, separator: str, connector: str):
+    celula = mapping.get("templateCell", "")
+    if not celula:
+        return
+
+    values = _extract_cell_values(source_data, dia, mapping.get("sourceColumns", []))
+    if not values:
+        ws[celula] = None
+        return
+
+    for col in values:
+        values[col] = list(dict.fromkeys(values[col]))
+
+    texto = TextProcessor.formatar_resumo(
+        values, mapping.get("formatTemplate", ""), separator, connector
+    )
+    ws[celula] = texto if texto else None
+
+
+def _extract_cell_values(source_data: dict, dia: int, columns: list[str]) -> dict:
+    combined = {}
+    for df in source_data.values():
+        if "_dia_aux" not in df.columns:
+            continue
+        filtro = df[df["_dia_aux"] == dia]
+        if filtro.empty:
+            continue
+        for col in columns:
+            if col not in filtro.columns:
                 continue
+            vals = filtro[col].dropna().unique().tolist()
+            vals = [v for v in vals if str(v).strip() and str(v).lower() != "nan"]
+            if vals:
+                combined.setdefault(col, []).extend(vals)
+    return combined
 
-            format_template = mapping.get("formatTemplate", "")
-            source_columns = mapping.get("sourceColumns", [])
 
-            combined_values = {}
-            for sheet_name, df in abas_origem.items():
-                if "_dia_aux" not in df.columns:
-                    continue
-                filtro = df[df["_dia_aux"] == dia]
-                if filtro.empty:
-                    continue
-                for col in source_columns:
-                    if col in filtro.columns:
-                        vals = filtro[col].dropna().unique().tolist()
-                        vals = [v for v in vals if str(v).strip() and str(v).lower() != "nan"]
-                        if vals:
-                            if col not in combined_values:
-                                combined_values[col] = []
-                            combined_values[col].extend(vals)
-
-            if not combined_values:
-                ws[celula] = None
-                continue
-
-            for col in combined_values:
-                combined_values[col] = list(dict.fromkeys(combined_values[col]))
-
-            resumo = TextProcessor.formatar_resumo(combined_values, format_template, list_separator, list_connector)
-            ws[celula] = resumo if resumo else None
-
+def _save(tm: TemplateManager) -> io.BytesIO:
     output = io.BytesIO()
     tm.save_to_stream(output)
     output.seek(0)
