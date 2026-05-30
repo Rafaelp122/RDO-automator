@@ -210,35 +210,95 @@ retornadas como:
 
 ## Como executar
 
-### Backend
+### Pré-requisitos
+
+- **Python 3.11+** com [uv](https://docs.astral.sh/uv/) instalado
+- **Node.js 20+** com npm
+- (Opcional) Docker para rodar o backend em container
+
+### Passo 1 — Backend
 
 ```bash
 cd backend
+
+# Instalar dependências (cria .venv automaticamente)
 uv sync
+
+# Iniciar servidor de desenvolvimento (recarrega ao salvar)
 uv run uvicorn src.main:app --reload --port 8000
 ```
 
-A API fica disponível em `http://localhost:8000`.
-Documentação interativa (Swagger) em `http://localhost:8000/docs`.
+A API fica disponível em `http://localhost:8000` com:
 
-### Frontend
+| URL | Descrição |
+|---|---|
+| `http://localhost:8000/health` | Health check |
+| `http://localhost:8000/docs` | Swagger (documentação interativa) |
+| `http://localhost:8000/api/preview/source` | POST — preview da origem |
+| `http://localhost:8000/api/preview/template` | POST — preview do template |
+| `http://localhost:8000/api/generate` | POST — geração do relatório |
+
+### Passo 2 — Frontend
 
 ```bash
 cd frontend
+
+# Instalar dependências
 npm install
+
+# Iniciar dev server (porta 3000)
 npm run dev
 ```
 
-O dev server inicia em `http://localhost:3000` e faz proxy das chamadas
-de API para `http://localhost:8000` (configurável via `.env`).
+O frontend abre em `http://localhost:3000` e aponta para a API em
+`http://localhost:8000`. Para mudar o endereço da API, edite
+`frontend/.env`:
 
-### Docker
+```
+VITE_API_URL=http://localhost:8000
+```
+
+> O backend precisa estar rodando **antes** do frontend para que as
+> chamadas de API funcionem.
+
+### Fluxo completo de uso
+
+1. Acesse `http://localhost:3000`
+2. Preencha os dados do contrato (data início, prazo, mês, ano) na
+   seção **"1. Dados da Medição"**
+3. Faça upload da **planilha de origem** (.xlsx ou .xls) — o sistema
+   exibe abas, colunas e dados para conferência
+4. Selecione as abas e colunas que deseja extrair, clique em
+   **"Confirmar Seleção Extraída"**
+5. Faça upload do **template** (.xlsx) na seção
+   **"2. Template do Relatório"** — o sistema exibe as células,
+   imagens e regiões mescladas
+6. Clique em **"Confirmar Template"** para liberar a seção de
+   mapeamento
+7. Na seção **"3. Mapeamento de Células"**:
+   - Clique nas colunas disponíveis para inseri-las no template de texto
+   - Escreva o formato desejado (ex: `Serviços: {Servico} no bairro {Bairro}`)
+   - Clique em uma célula vazia no preview do template para selecioná-la
+   - Clique em **"Confirmar"** para criar o mapeamento
+   - Ajuste o separador de lista e o conector final se necessário
+8. Clique em **"GERAR RELATÓRIO XLSX"** no rodapé — o download inicia
+   automaticamente
+9. Abra o arquivo `Diario_Consolidado.xlsx` — cada aba corresponde a um
+   dia do mês, preenchida com os dados formatados
+
+### Docker (opcional)
 
 ```bash
 cd backend
 docker build -t rdo-automator .
-docker run -p 8080:8080 rdo-automator
+docker run -p 8080:8080 \
+  -e ALLOWED_ORIGINS="http://localhost:3000" \
+  -e MAX_UPLOAD_MB=50 \
+  rdo-automator
 ```
+
+O backend fica disponível em `http://localhost:8080`. Ajuste a variável
+`ALLOWED_ORIGINS` conforme a origem do frontend.
 
 ## Configuração
 
