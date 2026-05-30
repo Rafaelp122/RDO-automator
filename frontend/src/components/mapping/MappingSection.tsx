@@ -1,4 +1,4 @@
-import { use } from 'react';
+import { use, useMemo } from 'react';
 import XIcon from 'lucide-react/dist/esm/icons/x';
 import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
@@ -18,9 +18,16 @@ export function MappingSection() {
   } = use(MappingContext)!;
 
   const dataSource = use(DataSourceContext);
-  const availableColumns = dataSource
-    ? dataSource.state.sheets.filter((s) => s.selected).flatMap((s) => s.selectedColumns)
-    : ([] as string[]);
+  const availableColumns = useMemo(
+    () => dataSource
+      ? dataSource.state.sheets.flatMap((s) => s.selected ? s.selectedColumns : [])
+      : ([] as string[]),
+    [dataSource?.state.sheets],
+  );
+  const availableColumnsSet = useMemo(
+    () => new Set(availableColumns),
+    [availableColumns],
+  );
 
   const generatePreview = () => {
     if (!formatTemplate)
@@ -28,7 +35,7 @@ export function MappingSection() {
 
     const escaped = escapeHtml(formatTemplate);
     const previewHtml = escaped.replace(/\{([^}]+)\}/g, (_match, col) => {
-      if (availableColumns.includes(col)) {
+      if (availableColumnsSet.has(col)) {
         return `<mark class="bg-indigo-100 text-indigo-800 px-1 rounded not-italic">[Dado de ${col}]</mark>`;
       }
       return _match;
