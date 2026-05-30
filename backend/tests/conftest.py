@@ -1,3 +1,7 @@
+import os
+# Desabilita a chave de API nos testes para evitar 401 Unauthorized
+os.environ["API_KEY"] = ""
+
 import sys
 from pathlib import Path
 

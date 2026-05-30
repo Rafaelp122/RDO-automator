@@ -150,5 +150,3 @@ jobs:
             --max-instances 1 \
             --min-instances 0 \
             --allow-unauthenticated
-
-

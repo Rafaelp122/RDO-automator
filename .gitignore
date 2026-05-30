@@ -12,3 +12,8 @@ wheels/
 .coverage
 config.toml
 .superpowers/
+
+# Environment variables files
+.env
+.env.*
+!.env.example
