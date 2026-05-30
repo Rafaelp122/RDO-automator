@@ -105,6 +105,10 @@ report_automator/
 │   │       ├── template.py       # TemplateManager — manipulação do template
 │   │       ├── report.py         # ReportGenerator — geração do relatório consolidado
 │   │       └── processor.py      # TextProcessor — formatação de texto (Title Case)
+│   ├── tests/
+│   │   ├── unit/                 # Testes de unidade (ETL, processamento)
+│   │   └── integration/          # Testes de integração (API + fluxo completo)
+│   ├── .env.example              # Exemplo de variáveis de ambiente
 │   ├── pyproject.toml
 │   ├── Dockerfile
 │   └── uv.lock
@@ -122,15 +126,13 @@ report_automator/
 │   │       ├── Header.tsx
 │   │       ├── MappingSection.tsx
 │   │       └── TemplatePreview.tsx
+│   ├── .env.example              # Exemplo de variáveis de ambiente do frontend
 │   ├── index.html
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── tsconfig.json
-├── tests/
-│   ├── unit/                     # Testes de unidade (ETL, processamento)
-│   └── integration/              # Testes de integração (API + fluxo completo)
 └── .github/
-    └── workflows/                 # CI/CD (deploy-backend.yml, deploy-frontend.yml)
+    └── workflows/                 # CI/CD (integrity-ci.yml)
 ```
 
 ## API
@@ -302,30 +304,32 @@ O backend fica disponível em `http://localhost:8080`. Ajuste a variável
 
 ## Configuração
 
-O backend utiliza variáveis de ambiente, centralizadas em
+O backend utiliza variáveis de ambiente do arquivo `.env`, centralizadas em
 `backend/src/config.py`:
 
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173,https://rdo.vercel.app` | Origens CORS permitidas |
-| `MAX_UPLOAD_MB` | `50` | Tamanho máximo de upload |
+| `MAX_UPLOAD_MB` | `32` | Tamanho máximo de upload (alinhado ao limite do Cloud Run) |
+| `API_KEY` | `""` | Chave de autenticação das rotas HTTP (desabilitada se vazia) |
 | `LOG_LEVEL` | `INFO` | Nível de logging |
 | `LOG_PATH` | `/tmp/rdo_automator.log` | Caminho do arquivo de log |
 
-O frontend usa `.env` para configurar a URL da API:
+O frontend usa `.env` para configurar a URL e chave da API:
 
 ```
 VITE_API_URL=http://localhost:8000
+VITE_API_KEY=dev-key
 ```
 
 ## Testes
 
 ```bash
 cd backend
-uv run pytest ../tests/
+uv run pytest tests/
 ```
 
-25 testes cobrindo:
+29 testes cobrindo:
 
 - **Unidade** — text processor (capitalização, pluralização), Excel loader
   (detecção de data), template manager (clonagem de abas)
@@ -334,16 +338,16 @@ uv run pytest ../tests/
 
 ## Deploy
 
-CI/CD configurado via GitHub Actions no push para `master`:
+A arquitetura de deploy é dividida em dois fluxos automáticos após pushes na branch `master`:
 
-| Pipeline | Gatilho | Destino |
-|---|---|---|
-| `deploy-backend.yml` | Alterações em `backend/**` | Google Cloud Run |
-| `deploy-frontend.yml` | Alterações em `frontend/**` | Vercel |
+| Serviço | Fluxo de Deploy | Gatilho | Destino |
+|---|---|---|---|
+| **Backend (API)** | GitHub Actions (`integrity-ci.yml`) | Push em `backend/**` com testes passando | Google Cloud Run |
+| **Frontend (SPA)** | Integração Nativa da Vercel | Pushes no repositório GitHub (com filtro de diretório) | Vercel |
 
-Secrets necessários:
-- Backend: `GCP_SA_KEY`, `GCP_PROJECT_ID`
-- Frontend: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+Secrets necessários no GitHub (para deploy do backend):
+- `GCP_PROJECT_ID`: ID do projeto no Google Cloud (ex: `rdo-automator`).
+- `GCP_SA_KEY`: Chave JSON da Conta de Serviço criada no GCP para deploy.
 
 ## Pipeline ETL (visão interna)
 
