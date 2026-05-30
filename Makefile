@@ -47,21 +47,21 @@ fe:
 	cd frontend && npm run dev
 
 test:
-	cd backend && uv run pytest ../tests/
+	cd backend && uv run pytest tests/
 
 lint: lint-backend lint-frontend
 
 lint-backend:
-	cd backend && uv run ruff check . ../tests/
-	cd backend && uv run ruff format --check . ../tests/
+	cd backend && uv run ruff check . tests/
+	cd backend && uv run ruff format --check . tests/
 	cd backend && uv run pyright src/ --pythonversion 3.11
 
 lint-frontend:
 	cd frontend && npx tsc --noEmit
 
 format:
-	cd backend && uv run ruff check --fix . ../tests/
-	cd backend && uv run ruff format . ../tests/
+	cd backend && uv run ruff check --fix . tests/
+	cd backend && uv run ruff format . tests/
 
 check: test lint
 

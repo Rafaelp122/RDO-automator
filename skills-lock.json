@@ -13,11 +13,6 @@
       "skillPath": "SKILL.md",
       "computedHash": "320eaf861e3a0a923bfaad0726cb311a3fe30093378f8d26c89b9c5ae5c42b35"
     },
-    "pyside6-reviewer": {
-      "source": "akiselev/qt-llm-template",
-      "sourceType": "github",
-      "computedHash": "f6b411a902ff72aa1223ff110c4615ebd6640c096e4fb4655154c165279644b6"
-    },
     "vercel-composition-patterns": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",

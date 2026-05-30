@@ -9,14 +9,6 @@ wheels/
 # Virtual environments
 .venv
 
-# Logs
-logs/
-
-# Data files
-data/input/*
-!data/input/.gitkeep
-data/output/*
-!data/output/.gitkeep
 .coverage
 config.toml
 .superpowers/
