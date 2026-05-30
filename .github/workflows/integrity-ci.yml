@@ -50,7 +50,6 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "backend/uv.lock"
 
       - name: Setup Node
         if: needs.detect-changes.outputs.frontend == 'true'
@@ -62,15 +61,15 @@ jobs:
 
       - name: Ruff Check
         if: needs.detect-changes.outputs.backend == 'true'
-        run: cd backend && uv run ruff check . ../tests/
+        run: cd backend && uv run ruff check .
 
       - name: Ruff Format Check
         if: needs.detect-changes.outputs.backend == 'true'
-        run: cd backend && uv run ruff format --check . ../tests/
+        run: cd backend && uv run ruff format --check .
 
       - name: Pyright
         if: needs.detect-changes.outputs.backend == 'true'
-        run: cd backend && uv run pyright src/ --pythonversion 3.11
+          run: cd backend && uv run pyright src/ tests/ --pythonversion 3.12
 
       - name: Frontend TypeCheck
         if: needs.detect-changes.outputs.frontend == 'true'
@@ -93,9 +92,8 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "backend/uv.lock"
       - name: pytest
-        run: cd backend && uv run pytest ../tests/ -v
+        run: cd backend && uv run pytest tests/ -v
 
   # ---------------------------------------------------------------------------
   # JOB 3: FRONTEND BUILD
