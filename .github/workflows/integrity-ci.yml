@@ -6,9 +6,9 @@ concurrency:
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -123,7 +123,7 @@ jobs:
     name: Deploy Backend (Cloud Run)
     needs: [detect-changes, backend-tests]
     if: |
-      github.ref == 'refs/heads/master' &&
+      github.ref == 'refs/heads/main' &&
       github.event_name == 'push' &&
       needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
