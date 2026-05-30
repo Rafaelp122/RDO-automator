@@ -1,44 +1,63 @@
-.PHONY: help install run fe test lint docker-build docker-run clean
+.PHONY: help install run fe test lint check docker-build docker-run clean
 
 # ---------------------------------------------------------------------------
-# RDO Automator — comandos essenciais
+# RDO Automator — Gerador de Diários de Obra
 # ---------------------------------------------------------------------------
 
-help: ## Exibe esta ajuda
-	@grep -E '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | sort | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
+help:
+	@echo "=============================================================================="
+	@echo "  RDO Automator v2.0 — Gerador de Diários de Obra"
+	@echo "=============================================================================="
+	@echo ""
+	@echo "📦 SETUP"
+	@echo "  make install             - Instala dependências (uv sync + npm install)"
+	@echo ""
+	@echo "🔥 DESENVOLVIMENTO"
+	@echo "  make run                 - Backend em http://localhost:8000 (uvicorn --reload)"
+	@echo "  make fe                  - Frontend em http://localhost:3000 (Vite dev server)"
+	@echo ""
+	@echo "🐳 DOCKER"
+	@echo "  make docker-build        - Constrói a imagem Docker do backend"
+	@echo "  make docker-run          - Executa o container na porta 8080"
+	@echo ""
+	@echo "🧪 TESTES & QUALIDADE"
+	@echo "  make test                - Roda os 29 testes (unidade + integração)"
+	@echo "  make lint                - TypeCheck do frontend (tsc --noEmit)"
+	@echo "  make check               - test + lint (use antes de commit)"
+	@echo ""
+	@echo "🧹 MANUTENÇÃO"
+	@echo "  make clean               - Remove __pycache__, .pytest_cache, .venv, node_modules, dist"
+	@echo ""
+	@echo "=============================================================================="
 
-install: ## Instala dependências (backend + frontend)
+install:
 	@echo "=== Backend ==="
 	cd backend && uv sync
 	@echo ""
 	@echo "=== Frontend ==="
 	cd frontend && npm install
 
-run: ## Inicia o servidor backend (http://localhost:8000)
+run:
 	cd backend && uv run uvicorn src.main:app --reload --port 8000
 
-fe: ## Inicia o dev server frontend (http://localhost:3000)
+fe:
 	cd frontend && npm run dev
 
-test: ## Roda todos os testes (unidade + integração)
+test:
 	cd backend && uv run pytest ../tests/
 
-test-watch: ## Roda os testes automaticamente a cada alteração
-	cd backend && uv run pytest-watch ../tests/
-
-lint: ## Typecheck do frontend (TypeScript)
+lint:
 	cd frontend && npx tsc --noEmit
 
-docker-build: ## Constrói a imagem Docker do backend
+check: test lint
+
+docker-build:
 	cd backend && docker build -t rdo-automator .
 
-docker-run: ## Executa o container (porta 8080)
+docker-run:
 	docker run -p 8080:8080 --rm rdo-automator
 
-check: test lint ## Roda testes + typecheck (use antes de commit)
-
-clean: ## Remove caches, venv e build artifacts
+clean:
 	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
 	@rm -rf backend/.venv backend/.coverage
