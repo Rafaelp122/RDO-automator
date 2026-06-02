@@ -7,10 +7,10 @@ function headers(): Record<string, string> {
   return API_KEY ? { "X-API-Key": API_KEY } : {};
 }
 
-export async function previewSource(file: File): Promise<SourcePreviewResponse> {
+export async function previewSource(file: File, headerRow: number = 0): Promise<SourcePreviewResponse> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${API_URL}/api/preview/source`, {
+  const res = await fetch(`${API_URL}/api/preview/source?header_row=${headerRow}`, {
     method: "POST",
     body: form,
     headers: headers(),
@@ -41,11 +41,13 @@ export async function generateReport(
   source: File,
   template: File,
   config: GenerateConfig,
+  headerRow: number = 0,
 ): Promise<Blob> {
   const form = new FormData();
   form.append("source", source);
   form.append("template", template);
   form.append("config", JSON.stringify(config));
+  form.append("header_row", String(headerRow));
 
   const res = await fetch(`${API_URL}/api/generate`, {
     method: "POST",

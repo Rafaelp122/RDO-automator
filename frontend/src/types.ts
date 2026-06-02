@@ -98,6 +98,7 @@ export interface DataSourceState {
   file: File | null;
   sheets: Sheet[];
   isComplete: boolean;
+  headerRow: number;
 }
 
 export interface DataSourceActions {
@@ -106,6 +107,7 @@ export interface DataSourceActions {
   toggleSheet: (name: string) => void;
   toggleColumn: (sheetName: string, col: string) => void;
   confirm: () => void;
+  changeHeaderRow: (row: number) => void;
 }
 
 export interface DataSourceContextValue {

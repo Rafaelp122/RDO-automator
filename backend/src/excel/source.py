@@ -71,12 +71,12 @@ def _extract_acronym_candidates(all_sheets: dict[str, pd.DataFrame]) -> list[str
     return candidates
 
 
-def preview_source(file_bytes: bytes, filename: str) -> SourcePreviewResponse:
+def preview_source(file_bytes: bytes, filename: str, header_row: int = 0) -> SourcePreviewResponse:
     if not filename.lower().endswith((".xlsx", ".xls")):
         raise InvalidFileExtension("Arquivo de origem deve ser .xlsx ou .xls")
 
     buffer = io.BytesIO(file_bytes)
-    all_sheets = load_source_data(buffer)
+    all_sheets = load_source_data(buffer, header_row=header_row)
 
     sheets = []
     for name, df in all_sheets.items():

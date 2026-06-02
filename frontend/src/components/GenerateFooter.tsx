@@ -51,7 +51,7 @@ export function GenerateFooter({ contract }: GenerateFooterProps) {
         listConnector: mappingCtx?.state.listConnector ?? ' e ',
       };
 
-      const blob = await generateReport(sourceFile, templateFile, config);
+      const blob = await generateReport(sourceFile, templateFile, config, dataSource?.state.headerRow ?? 0);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

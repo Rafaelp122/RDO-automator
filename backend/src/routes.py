@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, Query, UploadFile
 from fastapi.responses import StreamingResponse
 
 from src.excel import ReportGenerator, preview_source, preview_template
@@ -10,14 +10,20 @@ router = APIRouter(prefix="/api")
 
 
 @router.post("/preview/source", response_model=SourcePreviewResponse)
-async def preview_source_route(file: Annotated[UploadFile, File()]):
+async def preview_source_route(
+    file: Annotated[UploadFile, File()],
+    header_row: Annotated[int, Query()] = 0,
+):
     """Retorna as abas, colunas e as 20 primeiras linhas da planilha de origem.
 
     Aceita arquivos .xlsx ou .xls. A coluna de data é detectada automaticamente
     e uma coluna auxiliar ``_dia_aux`` é gerada internamente (não exposta no preview).
+
+    O parâmetro ``header_row`` define qual linha da planilha contém os nomes
+    das colunas (0 = primeira linha).
     """
     contents = await file.read()
-    return preview_source(contents, file.filename or "")
+    return preview_source(contents, file.filename or "", header_row=header_row)
 
 
 @router.post("/preview/template", response_model=TemplatePreviewResponse)
@@ -36,6 +42,7 @@ async def generate_route(
     source: Annotated[UploadFile, File()],
     template: Annotated[UploadFile, File()],
     config: Annotated[str, Form()],
+    header_row: Annotated[int, Form()] = 0,
 ):
     """Gera o relatório consolidado (Diário de Obra) a partir da planilha de dados,
     do template Excel e da configuração de mapeamento (JSON string).
@@ -43,12 +50,16 @@ async def generate_route(
     Para cada dia do mês do contrato, clona o template, filtra os dados da origem
     por dia e preenche as células mapeadas com os valores formatados.
 
+    O parâmetro ``header_row`` define qual linha da planilha de origem contém
+    os nomes das colunas (0 = primeira linha).
+
     Retorna o arquivo .xlsx como download (StreamingResponse).
     """
     source_bytes = await source.read()
     template_bytes = await template.read()
     output = ReportGenerator(
-        source_bytes, template_bytes, source.filename or "", template.filename or "", config
+        source_bytes, template_bytes, source.filename or "", template.filename or "", config,
+        header_row=header_row,
     ).generate()
     return StreamingResponse(
         output,

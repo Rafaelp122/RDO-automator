@@ -30,12 +30,14 @@ class ReportGenerator:
         source_filename: str,
         template_filename: str,
         raw_config: dict | str,
+        header_row: int = 0,
     ):
         self.source_bytes = source_bytes
         self.template_bytes = template_bytes
         self.source_filename = source_filename
         self.template_filename = template_filename
         self.raw_config = raw_config
+        self.header_row = header_row
 
     def generate(self) -> io.BytesIO:
         """Executa o pipeline completo e retorna o arquivo Excel gerado."""
@@ -53,7 +55,7 @@ class ReportGenerator:
             len(config["mappings"]),
         )
 
-        source_data = load_source_data(io.BytesIO(self.source_bytes))
+        source_data = load_source_data(io.BytesIO(self.source_bytes), header_row=self.header_row)
 
         template = TemplateManager(io.BytesIO(self.template_bytes))
 

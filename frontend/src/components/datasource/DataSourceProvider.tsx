@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useState, useCallback, useRef, type ReactNode } from 'react';
 import { use } from 'react';
 import type { DataSourceContextValue, DataSourceState, Sheet } from '../../types';
 import { previewSource } from '../../services/api';
@@ -11,16 +11,19 @@ const initialState: DataSourceState = {
   file: null,
   sheets: [],
   isComplete: false,
+  headerRow: 0,
 };
 
 export function DataSourceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DataSourceState>(initialState);
   const wizard = use(WizardContext);
+  const currentFile = useRef<File | null>(null);
 
   const upload = useCallback(async (name: string, f: File) => {
-    setState((prev) => ({ ...prev, fileName: name, file: f, isComplete: false }));
+    currentFile.current = f;
+    setState((prev) => ({ ...prev, fileName: name, file: f, isComplete: false, headerRow: 0 }));
     try {
-      const result = await previewSource(f);
+      const result = await previewSource(f, 0);
       const sheets: Sheet[] = result.sheets.map((s) => ({
         name: s.name,
         selected: false,
@@ -32,6 +35,25 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       alert((err as Error).message);
       setState((prev) => ({ ...prev, fileName: null, file: null }));
+    }
+  }, []);
+
+  const changeHeaderRow = useCallback(async (headerRow: number) => {
+    const f = currentFile.current;
+    if (!f) return;
+    setState((prev) => ({ ...prev, headerRow, isComplete: false }));
+    try {
+      const result = await previewSource(f, headerRow);
+      const sheets: Sheet[] = result.sheets.map((s) => ({
+        name: s.name,
+        selected: false,
+        columns: s.columns,
+        selectedColumns: [],
+        data: s.data,
+      }));
+      setState((prev) => ({ ...prev, sheets }));
+    } catch (err) {
+      alert((err as Error).message);
     }
   }, []);
 
@@ -73,7 +95,7 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
     <DataSourceContext
       value={{
         state,
-        actions: { upload, clear, toggleSheet, toggleColumn, confirm },
+        actions: { upload, clear, toggleSheet, toggleColumn, confirm, changeHeaderRow },
         meta: {},
       }}
     >

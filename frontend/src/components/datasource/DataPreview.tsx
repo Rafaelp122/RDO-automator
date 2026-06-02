@@ -3,8 +3,8 @@ import { DataSourceContext } from './DataSourceProvider';
 
 export function DataPreview() {
   const {
-    state: { sheets },
-    actions: { toggleSheet, toggleColumn, confirm },
+    state: { sheets, headerRow },
+    actions: { toggleSheet, toggleColumn, confirm, changeHeaderRow },
   } = use(DataSourceContext)!;
 
   const [activeTabName, setActiveTabName] = useState<string>(() => sheets[0]?.name ?? '');
@@ -39,6 +39,23 @@ export function DataPreview() {
           <span className="w-1 h-1 bg-[var(--color-primary)] rounded-full"></span>
           <span>{totalSelectedColumns} colunas</span>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2 mb-4">
+        <label className="text-xs text-[var(--color-text-secondary)] font-medium">
+          Linha do cabeçalho:
+        </label>
+        <select
+          className="text-xs border border-slate-300 rounded px-2 py-1 bg-white text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+          value={headerRow}
+          onChange={(e) => changeHeaderRow(Number(e.target.value))}
+        >
+          {Array.from({ length: 11 }, (_, i) => (
+            <option key={i} value={i}>
+              {i + 1} {i === 0 ? '(padrão)' : ''}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex border-b border-[var(--color-card-border)] mb-4 overflow-x-auto">
