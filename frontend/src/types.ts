@@ -33,6 +33,7 @@ export type CellData = {
   col: number;
   value: string | null;
   font: { bold: boolean | null; size: number | null } | null;
+  style: Record<string, string> | null;
 };
 
 export type ImageData = {
@@ -45,6 +46,8 @@ export type TemplateSheet = {
   cells: CellData[];
   images: ImageData[];
   merged: Record<string, unknown>[];
+  colWidths: Record<string, number> | null;
+  rowHeights: Record<number, number> | null;
 };
 
 export type TemplatePreviewResponse = {
