@@ -29,6 +29,7 @@ class CellData(BaseModel):
     col: int
     value: str | None = None
     font: dict[str, int | bool | None] | None = None
+    style: dict[str, str] | None = None
 
 
 class ImageData(BaseModel):
@@ -45,6 +46,8 @@ class TemplateSheet(BaseModel):
     cells: list[CellData]
     images: list[ImageData]
     merged: list[dict] = []
+    col_widths: dict[str, float] | None = None
+    row_heights: dict[int, float] | None = None
 
 
 class TemplatePreviewResponse(BaseModel):
