@@ -58,6 +58,35 @@ def test_preview_source_suggests_acronyms():
     assert "Troca" not in result.suggestedAcronyms
 
 
+def test_preview_source_with_non_string_columns():
+    """Regression: integer column names should not crash preview (e.g. when header is a numeric row)."""
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        pd.DataFrame({0: ["A", "B"], 1: ["X", "Y"]}).to_excel(
+            writer, sheet_name="Dados", index=False
+        )
+    buffer.seek(0)
+    result = preview_source(buffer.read(), "test.xlsx")
+    assert len(result.sheets) == 1
+    assert result.sheets[0].columns == ["0", "1"]
+    assert len(result.sheets[0].data) > 0
+
+
+def test_preview_source_with_custom_header_row():
+    """Preview should use the header_row parameter to parse column names."""
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        pd.DataFrame(
+            {
+                "Data": ["2026-01-01"],
+                "Atividade": ["Escavacao"],
+            }
+        ).to_excel(writer, sheet_name="Obra", index=False)
+    buffer.seek(0)
+    result = preview_source(buffer.read(), "test.xlsx", header_row=0)
+    assert "Atividade" in result.sheets[0].columns
+
+
 def _create_styled_template_xlsx() -> bytes:
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
