@@ -83,6 +83,89 @@ def _read_image_data(img) -> tuple | None:
         return None
 
 
+_BORDER_STYLE_MAP = {
+    "thin": "1px solid",
+    "hair": "1px solid",
+    "medium": "2px solid",
+    "thick": "3px solid",
+    "double": "3px double",
+    "dashed": "1px dashed",
+    "dotted": "1px dotted",
+}
+
+
+def _cell_style(cell) -> dict[str, str]:
+    style: dict[str, str] = {}
+
+    try:
+        fill = cell.fill
+        if fill and fill.patternType and fill.fgColor:
+            rgb = fill.fgColor.rgb
+            if rgb and rgb not in ("00000000", "0"):
+                style["background-color"] = f"#{rgb[-6:]}"
+    except Exception:
+        pass
+
+    try:
+        font = cell.font
+        if font:
+            if font.bold:
+                style["font-weight"] = "bold"
+            if font.italic:
+                style["font-style"] = "italic"
+            if font.underline and font.underline != "none":
+                style["text-decoration"] = "underline"
+            if font.size:
+                style["font-size"] = f"{font.size:g}pt"
+            if font.name:
+                style["font-family"] = font.name
+            if font.color and font.color.rgb:
+                rgb = font.color.rgb
+                if rgb and rgb not in ("00000000", "0"):
+                    style["color"] = f"#{rgb[-6:]}"
+    except Exception:
+        pass
+
+    try:
+        align = cell.alignment
+        if align:
+            if align.horizontal:
+                style["text-align"] = align.horizontal
+            if align.vertical:
+                style["vertical-align"] = align.vertical
+            if align.wrapText:
+                style["white-space"] = "pre-wrap"
+    except Exception:
+        pass
+
+    try:
+        border = cell.border
+        if border:
+            for side_name, css_prop in [
+                ("left", "border-left"),
+                ("right", "border-right"),
+                ("top", "border-top"),
+                ("bottom", "border-bottom"),
+            ]:
+                side = getattr(border, side_name, None)
+                if side and side.style:
+                    base = _BORDER_STYLE_MAP.get(side.style)
+                    if base:
+                        color = "#000000"
+                        try:
+                            if side.color and side.color.rgb:
+                                rgb = side.color.rgb
+                                if rgb and rgb not in ("00000000", "0"):
+                                    color = f"#{rgb[-6:]}"
+                        except Exception:
+                            pass
+                        style[css_prop] = f"{base} {color}"
+    except Exception:
+        pass
+
+    return style
+
+
 def preview_template(file_bytes: bytes, filename: str) -> TemplatePreviewResponse:
     if not filename.lower().endswith(".xlsx"):
         raise InvalidFileExtension("Template deve ser .xlsx")
@@ -105,8 +188,28 @@ def preview_template(file_bytes: bytes, filename: str) -> TemplatePreviewRespons
                         col=cell.column or 0,
                         value=str(cell.value) if cell.value is not None else None,
                         font=font_info,
+                        style=_cell_style(cell),
                     )
                 )
+
+        merged = []
+        for r in ws.merged_cells.ranges:
+            merged.append({
+                "min_col": r.min_col,
+                "max_col": r.max_col,
+                "min_row": r.min_row,
+                "max_row": r.max_row,
+            })
+
+        col_widths = {}
+        for col_letter, dim in ws.column_dimensions.items():
+            if dim.width:
+                col_widths[col_letter] = dim.width
+
+        row_heights = {}
+        for row_num, dim in ws.row_dimensions.items():
+            if dim.height:
+                row_heights[row_num] = dim.height
 
         images = []
         for img in getattr(ws, "_images", []):
@@ -124,7 +227,14 @@ def preview_template(file_bytes: bytes, filename: str) -> TemplatePreviewRespons
                 position["rowOff"] = img.anchor._from.rowOff
             images.append(ImageData(b64=f"data:image/png;base64,{b64}", position=position))
 
-        all_sheets.append(TemplateSheet(name=ws.title, cells=cells, images=images, merged=[]))
+        all_sheets.append(TemplateSheet(
+            name=ws.title,
+            cells=cells,
+            images=images,
+            merged=merged,
+            col_widths=col_widths or None,
+            row_heights=row_heights or None,
+        ))
 
     logger.info("Preview template: %d sheets from %s", len(all_sheets), filename)
     return TemplatePreviewResponse(sheets=all_sheets)
