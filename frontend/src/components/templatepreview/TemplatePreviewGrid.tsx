@@ -227,13 +227,14 @@ export function TemplatePreviewGrid({
               key={idx}
               src={img.b64}
               alt=""
-              style={{
-                position: "absolute",
-                left: `${leftPx}px`,
-                top: `${topPx}px`,
-                maxWidth: "200px",
-                pointerEvents: "none",
-              }}
+                style={{
+                  position: "absolute",
+                  left: `${leftPx}px`,
+                  top: `${topPx}px`,
+                  maxWidth: "200px",
+                  pointerEvents: "none",
+                  zIndex: 10,
+                }}
             />
           );
         })
