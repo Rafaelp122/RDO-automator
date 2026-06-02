@@ -108,8 +108,8 @@ export function MappingSection() {
             </div>
           </div>
 
-          <div className="mb-4 flex gap-4 items-end">
-            <div className="flex-1">
+          <div className="mb-4 flex gap-4 items-end lg:flex-col lg:items-stretch lg:gap-2">
+            <div className="flex-1 lg:flex-none">
               <label className="text-label block mb-1">3. Célula Destino (Template)</label>
               <div
                 className={`w-full bg-white border rounded px-3 py-2 text-xs h-[34px] flex items-center shadow-sm ${
@@ -125,7 +125,7 @@ export function MappingSection() {
             </div>
 
             <button
-              className="btn-primary flex-shrink-0 h-[34px] px-4 text-xs tracking-wide"
+              className="btn-primary flex-shrink-0 h-[34px] px-4 text-xs tracking-wide lg:w-full"
               onClick={addMapping}
               disabled={!selectedCell || !formatTemplate.trim()}
             >
