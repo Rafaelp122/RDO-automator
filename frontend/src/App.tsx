@@ -36,7 +36,7 @@ export default function App() {
               <Header />
 
               <main className="flex-1 overflow-y-auto">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
                   <p className="text-slate-500 mb-6 text-sm">
                     Siga os passos abaixo para mapear os dados da sua planilha para o arquivo de template final do RDO.
                   </p>
