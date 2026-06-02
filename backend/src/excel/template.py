@@ -91,6 +91,12 @@ _BORDER_STYLE_MAP = {
     "double": "3px double",
     "dashed": "1px dashed",
     "dotted": "1px dotted",
+    "mediumDashed": "2px dashed",
+    "dashDot": "1px dashed",
+    "mediumDashDot": "2px dashed",
+    "dashDotDot": "1px dotted",
+    "mediumDashDotDot": "2px dotted",
+    "slantDashDot": "1px dashed",
 }
 
 
@@ -103,7 +109,7 @@ def _cell_style(cell) -> dict[str, str]:
             rgb = fill.fgColor.rgb
             if rgb and rgb not in ("00000000", "0"):
                 style["background-color"] = f"#{rgb[-6:]}"
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     try:
@@ -123,7 +129,7 @@ def _cell_style(cell) -> dict[str, str]:
                 rgb = font.color.rgb
                 if rgb and rgb not in ("00000000", "0"):
                     style["color"] = f"#{rgb[-6:]}"
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     try:
@@ -135,7 +141,7 @@ def _cell_style(cell) -> dict[str, str]:
                 style["vertical-align"] = align.vertical
             if align.wrapText:
                 style["white-space"] = "pre-wrap"
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     try:
@@ -157,7 +163,7 @@ def _cell_style(cell) -> dict[str, str]:
                                 rgb = side.color.rgb
                                 if rgb and rgb not in ("00000000", "0"):
                                     color = f"#{rgb[-6:]}"
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError):
                             pass
                         style[css_prop] = f"{base} {color}"
     except Exception:
