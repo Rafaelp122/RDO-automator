@@ -80,10 +80,11 @@ def preview_source(file_bytes: bytes, filename: str, header_row: int = 0) -> Sou
 
     sheets = []
     for name, df in all_sheets.items():
-        cols = [str(c) for c in df.columns if c != "_dia_aux"]
+        cols = [c for c in df.columns if str(c) != "_dia_aux"]
         rows = df[cols].astype(object).fillna("").head(20).to_numpy().tolist()
         string_rows = [[str(cell) for cell in row] for row in rows]
-        sheets.append(SheetData(name=name, columns=cols, data=string_rows))
+        str_cols = [str(c) for c in cols]
+        sheets.append(SheetData(name=name, columns=str_cols, data=string_rows))
 
     acronyms = _extract_acronym_candidates(all_sheets)
 
