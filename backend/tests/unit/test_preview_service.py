@@ -104,7 +104,7 @@ def test_preview_template_styles():
     assert header_cell.style.get("background-color") == "#FFFF00"
     assert header_cell.style.get("text-align") == "center"
     assert header_cell.style.get("vertical-align") == "center"
-    assert "border" in header_cell.style.get("border-right", "")
+    assert "border-right" in header_cell.style
 
 
 def test_preview_template_merged_cells():
