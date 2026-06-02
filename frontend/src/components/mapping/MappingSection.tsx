@@ -1,4 +1,4 @@
-import { use, useMemo } from 'react';
+import { use, useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import XIcon from 'lucide-react/dist/esm/icons/x';
 import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
@@ -44,9 +44,46 @@ export function MappingSection() {
     return <span dangerouslySetInnerHTML={{ __html: previewHtml }} />;
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [splitPercent, setSplitPercent] = useState(45);
+  const [isLarge, setIsLarge] = useState(window.innerWidth >= 1024);
+  const dragging = useRef(false);
+
+  useEffect(() => {
+    const onResize = () => setIsLarge(window.innerWidth >= 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const onMouseDown = useCallback(() => {
+    dragging.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      setSplitPercent(Math.max(20, Math.min(70, pct)));
+    };
+    const onMouseUp = () => {
+      dragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-8">
-      <div className="flex flex-col h-full">
+    <div ref={containerRef} className="flex flex-col lg:flex-row gap-0">
+      <div className="flex flex-col h-full lg:pr-4" style={{ minWidth: 0, width: isLarge ? `${splitPercent}%` : undefined }}>
         <h3 className="font-semibold text-[var(--color-text-primary)] mb-4">Adicionar Mapeamento</h3>
 
         <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 shadow-sm">
@@ -202,7 +239,13 @@ export function MappingSection() {
         )}
       </div>
 
-      <TemplatePreviewInteractive />
+      <div
+        className="hidden lg:flex w-2 cursor-col-resize bg-slate-100 hover:bg-[var(--color-primary)] active:bg-[var(--color-primary)] shrink-0 transition-colors rounded-full mx-1"
+        onMouseDown={onMouseDown}
+      />
+      <div className="lg:pl-4 flex-1 min-w-0">
+        <TemplatePreviewInteractive />
+      </div>
     </div>
   );
 }

@@ -1,41 +1,5 @@
 import type { TemplateSheet, MappingData } from '../../types';
 
-interface TemplatePreviewGridProps {
-  sheets: TemplateSheet[];
-  onCellClick?: (cellRef: string) => void;
-  mappedCells?: Record<string, MappingData>;
-  selectedCell?: string | null;
-}
-
-function isMergedCell(coord: string, merged: TemplateSheet['merged']): boolean {
-  if (!merged || merged.length === 0) return false;
-  const match = /^([A-Z]+)(\d+)$/.exec(coord);
-  if (!match) return false;
-  const col = match[1];
-  const row = parseInt(match[2], 10);
-  for (const m of merged) {
-    const mr = m as Record<string, unknown>;
-    if (
-      typeof mr.min_col === 'number' &&
-      typeof mr.max_col === 'number' &&
-      typeof mr.min_row === 'number' &&
-      typeof mr.max_row === 'number'
-    ) {
-      const colNum = colToInt(col);
-      if (
-        colNum >= (mr.min_col as number) &&
-        colNum <= (mr.max_col as number) &&
-        row >= (mr.min_row as number) &&
-        row <= (mr.max_row as number)
-      ) {
-        if (mr.min_col === colNum && mr.min_row === row) return false;
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 function colToInt(col: string): number {
   let n = 0;
   for (let i = 0; i < col.length; i++) {
@@ -54,11 +18,20 @@ function intToCol(n: number): string {
   return s;
 }
 
+interface TemplatePreviewGridProps {
+  sheets: TemplateSheet[];
+  onCellClick?: (cellRef: string) => void;
+  mappedCells?: Record<string, MappingData>;
+  selectedCell?: string | null;
+  zoom?: number;
+}
+
 export function TemplatePreviewGrid({
   sheets,
   onCellClick,
   mappedCells = {},
   selectedCell = null,
+  zoom = 100,
 }: TemplatePreviewGridProps) {
   const activeSheet = sheets[0];
 
@@ -84,6 +57,7 @@ export function TemplatePreviewGrid({
 
   const colWidths = activeSheet.colWidths ?? {};
   const rowHeights = activeSheet.rowHeights ?? {};
+  const scale = zoom / 100;
 
   return (
     <div
@@ -91,6 +65,13 @@ export function TemplatePreviewGrid({
         interactive ? 'bg-white shadow-sm' : ''
       } excel-grid relative`}
     >
+      <div
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          width: `${100 / scale}%`,
+        }}
+      >
       <table
         className="w-full border-collapse text-xs select-none"
         style={{ borderCollapse: "collapse" }}
@@ -239,6 +220,7 @@ export function TemplatePreviewGrid({
           );
         })
       )}
+      </div>
     </div>
   );
 }
