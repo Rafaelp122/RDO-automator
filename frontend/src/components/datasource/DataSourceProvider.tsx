@@ -23,9 +23,9 @@ export function DataSourceProvider({ children }: { children: ReactNode }) {
       const result = await previewSource(f);
       const sheets: Sheet[] = result.sheets.map((s) => ({
         name: s.name,
-        selected: true,
+        selected: false,
         columns: s.columns,
-        selectedColumns: [...s.columns],
+        selectedColumns: [],
         data: s.data,
       }));
       setState((prev) => ({ ...prev, sheets }));

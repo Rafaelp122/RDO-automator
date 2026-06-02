@@ -89,7 +89,7 @@ describe('TemplatePreviewGrid', () => {
       render(<TemplatePreviewGrid sheets={[sheet]} />);
       const cell = screen.getByText('MergedHeader').closest('td');
       expect(cell).toBeInTheDocument();
-      expect((cell as HTMLElement).colSpan).toBe(3);
+      expect((cell as HTMLTableCellElement).colSpan).toBe(3);
     });
 
     it('hides non-anchor cells in merged range', () => {
