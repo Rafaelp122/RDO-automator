@@ -166,7 +166,7 @@ def _cell_style(cell) -> dict[str, str]:
                         except (AttributeError, TypeError, ValueError):
                             pass
                         style[css_prop] = f"{base} {color}"
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     return style
