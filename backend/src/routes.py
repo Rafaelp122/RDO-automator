@@ -58,7 +58,11 @@ async def generate_route(
     source_bytes = await source.read()
     template_bytes = await template.read()
     output = ReportGenerator(
-        source_bytes, template_bytes, source.filename or "", template.filename or "", config,
+        source_bytes,
+        template_bytes,
+        source.filename or "",
+        template.filename or "",
+        config,
         header_row=header_row,
     ).generate()
     return StreamingResponse(

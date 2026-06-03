@@ -59,7 +59,7 @@ def test_preview_source_suggests_acronyms():
 
 
 def test_preview_source_with_non_string_columns():
-    """Regression: integer column names should not crash preview (e.g. when header is a numeric row)."""
+    """Regression: integer column names should not crash preview."""
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
         pd.DataFrame({0: ["A", "B"], 1: ["X", "Y"]}).to_excel(
@@ -88,7 +88,7 @@ def test_preview_source_with_custom_header_row():
 
 
 def _create_styled_template_xlsx() -> bytes:
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
     wb = Workbook()
     ws = wb.active
@@ -161,7 +161,7 @@ def test_preview_template_dimensions():
 
 
 def test_preview_template_auto_colors():
-    from openpyxl.styles import PatternFill, Font
+    from openpyxl.styles import Font, PatternFill
 
     wb = Workbook()
     ws = wb.active

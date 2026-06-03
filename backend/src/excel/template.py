@@ -200,12 +200,14 @@ def preview_template(file_bytes: bytes, filename: str) -> TemplatePreviewRespons
 
         merged = []
         for r in ws.merged_cells.ranges:
-            merged.append({
-                "min_col": r.min_col,
-                "max_col": r.max_col,
-                "min_row": r.min_row,
-                "max_row": r.max_row,
-            })
+            merged.append(
+                {
+                    "min_col": r.min_col,
+                    "max_col": r.max_col,
+                    "min_row": r.min_row,
+                    "max_row": r.max_row,
+                }
+            )
 
         col_widths = {}
         for col_letter, dim in ws.column_dimensions.items():
@@ -233,14 +235,16 @@ def preview_template(file_bytes: bytes, filename: str) -> TemplatePreviewRespons
                 position["rowOff"] = img.anchor._from.rowOff
             images.append(ImageData(b64=f"data:image/png;base64,{b64}", position=position))
 
-        all_sheets.append(TemplateSheet(
-            name=ws.title,
-            cells=cells,
-            images=images,
-            merged=merged,
-            col_widths=col_widths or None,
-            row_heights=row_heights or None,
-        ))
+        all_sheets.append(
+            TemplateSheet(
+                name=ws.title,
+                cells=cells,
+                images=images,
+                merged=merged,
+                col_widths=col_widths or None,
+                row_heights=row_heights or None,
+            )
+        )
 
     logger.info("Preview template: %d sheets from %s", len(all_sheets), filename)
     return TemplatePreviewResponse(sheets=all_sheets)
